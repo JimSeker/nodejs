@@ -1,0 +1,15 @@
+<h2>Welcome to the high scores list, update page.</h2>
+
+<hr>
+{{#each listscores}}
+  <div class="listscore">
+    <form class="form-horizontal" role="form" action="/highscore-update/process" method="POST">
+    <input type=hidden name="name" value="{{name}}"> {{name}}
+    <input type="text" name="score" value="{{score}}">
+    <button type"submit" >Update</button>
+    </form>   
+   </div>
+{{/each}}
+
+<hr>
+<br /><a href="/">Return to home</a>

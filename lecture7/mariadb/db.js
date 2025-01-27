@@ -2,7 +2,7 @@
 const mariadb = require("mariadb");
 require("dotenv").config();
 
-async function getConnection () {
+async function getConnection() {
     let conn;
     try {
         conn = await mariadb.createConnection({
@@ -12,10 +12,6 @@ async function getConnection () {
             password: process.env.MDB_PASS,
             database: "cosc4735",
         });
-        // var rows = await conn.query("SELECT name, score FROM highscore");
-        // for (let i = 0, len = rows.length; i < len; i++) {
-        //     console.log(`${rows[i].name} ${rows[i].score}`);
-        //  }
     } catch (err) {
         console.log("SQL error in establishing a connection: ", err);
         conn = null;
@@ -24,30 +20,67 @@ async function getConnection () {
         return conn;
     };
 };
-
-function closeConnection( conn) {
+function closeConnection(conn) {
     if (conn) conn.close();
 }
 
 //Get list of contacts
+//add function with helper function that main code calls.
+function add_data(conn, data) {
+    return conn.batch("INSERT INTO highscore(name, score) VALUES (?, ?) ", data);
+}
+//open db, add the data, then close it.
+async function addData (name, number)  {
+    var score = [name, number];
+    let conn = await getConnection();
+    if (conn) {
+        await add_data(conn, score);
+        closeConnection(conn);
+    }
+};
+
+
+//helper query function for display
 function get_data(conn) {
     return conn.query("SELECT name, score FROM highscore");
- }
-
-
-async function main() {
-    let conn;
-    
-    conn = await getConnection();
-    if (conn) {  //connection worked
-    
-        var rows = await get_data(conn);
-       // var rows = await conn.query("SELECT name, score FROM highscore");
-        for (let i = 0, len = rows.length; i < len; i++) {
-            console.log(`${rows[i].name} ${rows[i].score}`);
-         }
-       closeConnection(conn);
+}
+//get the data function opens the db, gets the data, then closes the db.
+async function getData ()  {
+    let conn = await getConnection();
+    if (conn) {
+        const rows = await get_data(conn);
+        closeConnection(conn);
+        return rows;
+    } else {
+        return;
     }
+};
+
+
+async function update_data(conn, data) {
+    return conn.query("UPDATE highscore SET score = ? WHERE name = ?", data)
 }
 
-main();
+async function updateData (name, number)  {
+    var score = [number, name];  //yes, it's reversed, from add, because order it's used.
+    let conn = await getConnection();
+    if (conn) {
+        await update_data(conn, score);
+        closeConnection(conn);
+    }
+};
+
+function del_data(conn, data) {
+    return conn.query("DELETE FROM highscore where name = ?", data);
+}
+
+async function deleteData (name)  {
+    var value = [name];  //yes, needs to be in an array.
+    let conn = await getConnection();
+    if (conn) {
+        await del_data(conn, value);
+        closeConnection(conn);
+    }
+};
+
+module.exports = {getData, addData, updateData, deleteData};

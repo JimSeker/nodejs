@@ -1,70 +1,90 @@
+"use strict";
+const db = require('../db');
+
 // slightly modified version of the official W3C HTML5 email regex:
 // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
 const VALID_EMAIL_REGEX = new RegExp('^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@' +
   '[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?' +
   '(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$');
 
-// fake "newsletter signup" interface
-class NewsletterSignup {
-  constructor({ name, email }) {
-    this.name = name
-    this.email = email
-  }
-  async save() {
-    // here's where we would do the work of saving to a database
-    // since this method is async, it will return a promise, and
-    // since we're not throwing any errors, the promise will
-    // resolve successfully
-  }
-}
 
-exports.newsletterSignup = (req, res) => {
-  // we will learn about CSRF later...for now, we just
-  // provide a dummy value
-  res.render('newsletter-signup', { username: req.session.username, csrf: 'CSRF token goes here' })
-}
+exports.highScoreAdd = (req, res) => {
+  res.render('highscore-add', {} )
+};
 
-
-exports.newsletterSignupProcess = (req, res) => {
-  const name = req.body.name || '', email = req.body.email || ''
+exports.highScoreAddProcess = (req, res) => {
+  const name = req.body.name || '', score = req.body.score || '';
   // input validation
-  if(!VALID_EMAIL_REGEX.test(email)) {
-    req.session.flash = {
-      type: 'danger',
-      intro: 'Validation error!',
-      message: 'The email address you entered was not valid.',
-    };
-    return res.redirect(303, '/newsletter-signup');
+  if( name == '' && score == '') {
+    console.log("name " + name + " or score "+ socre +"invalid"); 
+    return res.redirect(303, '/highscore-add');
   }
-  // NewsletterSignup is an example of an object you might create; since
-  // every implementation will vary, it is up to you to write these
-  // project-specific interfaces.  This simply shows how a typical
-  // Express implementation might look in your project.
-  new NewsletterSignup({ name, email }).save()
-    .then(() => {
-      req.session.flash = {
-        type: 'success',
-        intro: 'Thank you!',
-        message: 'You have now been signed up for the newsletter.',
-      };
-      return res.redirect(303, '/newsletter-archive');
-    })
-    .catch(err => {
-      req.session.flash = {
-        type: 'danger',
-        intro: 'Database error!',
-        message: 'There was a database error; please try again later.',
-      }
-      return res.redirect(303, '/newsletter-archive')
-    })
-}
-exports.newsletterSignupThankYou = (req, res) => res.render('newsletter-signup-thank-you')
-exports.newsletterArchive = (req, res) => res.render('newsletter-archive')
+  //add the data to database, then redirect to home page?  add page?  
+  db.addData(name, score);
+  return res.redirect(303, '/')
+};
 
-exports.notFound = (req, res) => res.render('404')
+exports.highScoreUpdate = async (req, res) => {
+   const scoredata =  await db.getData();
+   //create the context variable with correct obj names hopefully.
+   const context = { listscores:  scoredata.map (
+      row => {
+        console.log("name is " + row.name);
+        return { 
+          name: row.name,
+          score: row.score,
+        }
+      }   
+   )};
+   //finally render the page with the data, hopefully
+   res.render('highscore-update', context);
+};
+
+exports.highScoreUpdateProcess = async (req, res) => {
+  const name = req.body.name || '', score = req.body.score || '';
+  // input validation
+  if( name == '' && score == '') {
+    console.log("name " + name + " or score "+ socre +"invalid"); 
+    return res.redirect(303, '/highscore-update');
+  }
+  //add the data to database, then redirect to home page?  add page?  
+  await db.updateData(name, score);
+  return res.redirect(303, '/')
+};
+
+exports.highScoredelete = async (req, res) => {
+  const scoredata =  await db.getData();
+  //create the context variable with correct obj names hopefully.
+  const context = { listscores:  scoredata.map (
+     row => {
+       console.log("name is " + row.name);
+       return { 
+         name: row.name,
+         score: row.score,
+       }
+     }   
+  )};
+  //finally render the page with the data, hopefully
+  res.render('highscore-del', context);
+};
+
+exports.highScoredeleteProcess = async (req, res) => {
+ const name = req.body.name;
+ // input validation
+ if( name == '' ) {
+   console.log("name " + name + "invalid"); 
+   return res.redirect(303, '/highscore-del');
+ }
+ //add the data to database, then redirect to home page?  add page?  
+ await db.deleteData(name);
+ return res.redirect(303, '/')
+};
+
+
+exports.notFound = (req, res) => res.render('404');
 
 // Express recognizes the error handler by way of its four
 // argumetns, so we have to disable ESLint's no-unused-vars rule
 /* eslint-disable no-unused-vars */
-exports.serverError = (err, req, res, next) => res.render('500')
+exports.serverError = (err, req, res, next) => res.render('500');
 /* eslint-enable no-unused-vars */
