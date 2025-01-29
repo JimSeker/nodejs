@@ -56,11 +56,12 @@ async function getData ()  {
     }
 };
 
-
+//helper funciton to update code
 async function update_data(conn, data) {
     return conn.query("UPDATE highscore SET score = ? WHERE name = ?", data)
 }
 
+//actual update database code. 
 async function updateData (name, number)  {
     var score = [number, name];  //yes, it's reversed, from add, because order it's used.
     let conn = await getConnection();
@@ -70,10 +71,11 @@ async function updateData (name, number)  {
     }
 };
 
+//delete helper code
 function del_data(conn, data) {
     return conn.query("DELETE FROM highscore where name = ?", data);
 }
-
+//actual delete database code.
 async function deleteData (name)  {
     var value = [name];  //yes, needs to be in an array.
     let conn = await getConnection();
@@ -83,4 +85,5 @@ async function deleteData (name)  {
     }
 };
 
+//only 4 funcitons are exported and can be used by the handler.js or index.js code.
 module.exports = {getData, addData, updateData, deleteData};
