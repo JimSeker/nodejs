@@ -1,0 +1,14 @@
+<h2>Welcome to the high scores list for all players.</h2>
+
+<hr>
+{{#each scoreinfo}}
+  <div class="listscore">
+    {{name}}
+      {{#each rowname}} 
+         {{rn}}
+      {{/each}}
+  </div>
+{{/each}}
+
+<hr>
+<br /><a href="/">Return to home</a>
