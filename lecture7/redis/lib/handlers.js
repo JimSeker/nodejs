@@ -20,29 +20,24 @@ exports.scoreAddProcess = (req, res) => {
 exports.scoreOther = async (req, res) => {
 
   const keys = await db.getAllListKeys();
-  console.log("back in scoreOther");
-  console.log(keys);
+  //console.log(keys);
   //create the context variable with correct obj names hopefully.
   var arrScores = [];
-  var listprom = keys.map(key => { 
-    return  db.getData(key); 
+  var listprom = keys.map(key => {
+    return db.getData(key);
   });
 
-  console.log(listprom);
   await Promise.all(listprom).then((scores) => {
-   // if (index != undefined) {
-    for (let i=0; i < scores.length; i++) {
-      arrScores.push( keys[i] + ": " + scores[i]);
+    //this is terrible for display, but need a list for the example.
+    for (let i = 0; i < scores.length; i++) {
+      arrScores.push(keys[i] + ": " + scores[i]);
     }
-      
   });
+  //this finally builds the data structure to render.
   const context = {
     scoreinfo: arrScores.map(
-      (row, index) => {
-        console.log("name is " + row);
-        return {
-          name: row,
-        }
+      (row) => {
+        return { name: row, }
       }
     )
   };

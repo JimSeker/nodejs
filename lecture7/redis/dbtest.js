@@ -27,21 +27,21 @@ async function main() {
      await client.del(key2);
      await client.del('');
     
+     var type = await client.type(key);
+     console.log(`The type of key '${key}' is: ${type}`);
+
     //list based keys.
     console.log("\nlists data");
-    await client.rPush(key2, data);
+    await client.rPush(key2, data);  
     await client.rPush(key2, data2);
     await client.rPush(key2, data3);
   
     rdata = await client.lPop(key2);
     console.log(" return value is "+rdata);
-    var type = await client.type(key);
-    console.log(`The type of key '${key}' is: ${type}`);
-
+ 
     //gets all the members of a list, using a range.
     var mylist = await client.lRange(key2, 0, -1);
     console.log(key2 + " return value is "+ mylist);
-
 
     rdata = await client.rPop(key2);
     console.log(" return value is "+rdata);

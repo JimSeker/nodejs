@@ -29,21 +29,20 @@ app.get('/', async (req, res) => {
 
   //get the userid from the cookie.
   var username = req.cookies.username;
-  console.log("username is " + username);
   //if it doesn't exist, set one.
   if (username == "") {
     username = pokemon.random();
     res.cookie('username', username);
     console.log("new username chosen" + username);
   }
+
+  //get all the scores for the username.
   const scoredata =  await db.getData(username);
-  // console.log(typeof scoredata);
-  // console.log(" is it array "+ Array.isArray(scoredata));
+  //now build the data structure for display.
   const context = {
     username: username,
     scoreinfo: scoredata.map (
       row => {
-        console.log("name is " + row);
         return { 
           score: row,
         }
