@@ -3,6 +3,8 @@ install mariadb
   start it.  make sure you set the root password 
 
   on pi's  for root:  sudo mysql -u root -p
+     sudo apt install mariadb-server
+     sudo mysql_secure_installation
   otherwise sudo mysql -u user -p    
     then enter the pasword for the user account
 

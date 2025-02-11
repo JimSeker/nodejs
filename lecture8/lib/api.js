@@ -54,7 +54,6 @@ exports.highScoredeleteProcess = async (req, res) => {
  }
  
  let ret = await db.deleteData(name);
- 
  return res.status(200).json({ error: false, message: "number of deleted is " + ret });
 };
 
