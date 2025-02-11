@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="photo_tint">#88101010</color>
+
+    <color name="primaryColor">#3f51b5</color>
+    <!-- 700 color -->
+    <color name="primaryColorDark">#303f9f</color>
+    <!-- A200 other color, so pink...? -->
+    <color name="accentColor">#ff4081</color>
+    <color name="primaryColorLight">#C5CAE9</color>
+
+    <color name="textColorSecondary">#727272</color>
+    <color name="textColorPrimary">#D9FFFFFF</color>
+
+    <color name="windowBackgroundColor">#607d8b</color>
+    <color name="navigationBarColor">#303f9f</color>
+
+    <!-- For the refresh colors.-->
+    <color name="red">#990000</color>
+    <color name="green">#009900</color>
+    <color name="blue">#000099</color>
+    <color name="orange">#FF9900</color>
+
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+</resources>
