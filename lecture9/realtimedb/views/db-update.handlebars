@@ -1,0 +1,16 @@
+<h2>Welcome to the note list, update page.</h2>
+
+<hr>
+{{#each listscores}}
+  <div class="listscore">
+    <form class="form-horizontal" role="form" action="/db-update/process" method="POST">
+    <input type=hidden name="key" value="{{key}}">
+    <input type="text" name="title" value="{{title}}">
+    <input type="text" name="note" value="{{note}}">
+    <button type"submit" >Update</button>
+    </form>   
+   </div>
+{{/each}}
+
+<hr>
+<br /><a href="/">Return to home</a>

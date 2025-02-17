@@ -1,0 +1,21 @@
+<h2>Welcome to the high scores list</h2>
+
+<hr>
+{{#if username}}
+<h3>Welcome {{username}}:</h3>
+
+{{#each listscores}}
+  <div class="listscore">
+   <p><B>KEY: </B>{{key}}, <B>Title: </b></B>{{title}}, <B>NOTE: </B>{{note}}</p>  
+   </div>
+{{/each}}
+
+<hr>
+<br /><a href="/db-add">Add a new score</a>
+<br /><a href="/db-update">update a score</a>
+<br /><a href="/db-del">delete a score</a>
+<br /><a href="/logout">logout</a>
+{{else}}
+<h3>You will need to login before you see the data.</h3>
+<br /><a href="/login">login</a>
+{{/if}}
