@@ -1,0 +1,20 @@
+<h2>Welcome to the firestore example listing</h2>
+
+<hr>
+{{#if username}}
+<h3>Welcome {{username}}:</h3>
+{{#each listscores}}
+<div class="listscore">
+  <p><B>KEY: </B>{{key}}, <B>First: </b></B>{{first}}, <B>Middle: </B>{{middle}} <B>Last: </B>{{last}} <B>Born:
+    </B>{{born}}</p>
+</div>
+{{/each}}
+<hr>
+<br /><a href="/db-add">Add a new entry</a>
+<br /><a href="/db-update">update a entry</a>
+<br /><a href="/db-del">delete a entry</a>
+<br /><a href="/logout">logout</a>
+{{else}}
+<h3>You will need to login before you see the data.</h3>
+<br /><a href="/login">login</a>
+{{/if}}

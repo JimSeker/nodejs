@@ -1,0 +1,27 @@
+<h2>Welcome to the login page</h2>
+
+<form class="form-horizontal" role="form"
+    action="/loginProcess" method="POST">
+  
+  <div class="form-group">
+    <label for="fieldEmail" class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control" 
+      id="fieldEmail" name="email">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="fieldPassword" class="col-sm-2 control-label">Password</label>
+    <div class="col-sm-4">
+      <input type="password" class="form-control"  required
+          id="fieldPassword" name="password">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-4">
+      <button type="submit" class="btn btn-primary">login</button>
+    </div>
+  </div>
+</form>
+<hr>
+<br /><a href="/">Return to home</a>
