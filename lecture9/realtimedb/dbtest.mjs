@@ -30,6 +30,17 @@ firebase.auth().signInWithEmailAndPassword(email, password)
      console.log(data);
     });
     //starCountRef.off();  //turns off the listener.  
+
+    //simple data test
+    firebase.database().ref('/simple').set({
+      simple: "hello, world, js",
+      second: "second value"
+    });
+    firebase.database().ref('/simple').on('value', (snapshot) => {
+      const data = snapshot.val();
+      console.log(data);
+    });
+
   })
   .catch((error) => {
     const errorCode = error.code;
@@ -37,6 +48,8 @@ firebase.auth().signInWithEmailAndPassword(email, password)
     console.log(errorMessage);
   });
 
+
+ 
 
 // const starCountRef = ref(db, 'messages/');
 // onValue(starCountRef, (snapshot) => {
