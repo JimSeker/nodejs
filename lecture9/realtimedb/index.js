@@ -53,7 +53,7 @@ app.use(expressSession({
 
 //most of this could be in the hanlders.js, but here just to show it. 
 app.get('/', async (req, res) => {
-  //const fb_data = await db.getData();
+  const fb_data = await db.getData();
 
   //  //create the context variable with correct obj names hopefully.
   const context = {  username: req.session.username, listscores: fb_data };
