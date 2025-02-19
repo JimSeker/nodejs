@@ -8,6 +8,11 @@ async function getData(key) {
     client.connect();
     client.on('error', err => { console.log('Redis Client Error', err); return; });
 
+    if (key == null) {
+        console.log("key is null");
+        return [];
+    }
+
     //if the key exists, then return data, else return empty array.
     const exists = await client.exists(key);
     var mylist;
