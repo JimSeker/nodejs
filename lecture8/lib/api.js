@@ -18,7 +18,7 @@ exports.highScoreAddProcess = (req, res) => {
     const name = req.body.name || '', score = req.body.score || '';
     // input validation
     if (name == '' || score == '') {
-        console.log("name " + name + " or score " + socre + "invalid");
+        console.log("name " + name + " or score " + score + "invalid");
         return res.status(200).json({ error: true, message: "Invalid input" });
     }
     //add the data to database, then redirect to home page?  add page?  
