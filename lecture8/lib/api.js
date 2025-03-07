@@ -40,7 +40,7 @@ exports.highScoreGetOne = async (req, res) => {
     if (scoredata.length > 0) {
         return res.status(200).json({error: false, data: scoredata});
     } else {
-        return res.status(404).json({ error: true, message: "Name not found" });
+        return res.status(200).json({ error: true, message: "Name not found" });
     }
 }
 
