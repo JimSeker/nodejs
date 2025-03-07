@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, listAll, deleteObject, getDownloadURL, getStream, getBytes } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
-
+import axios from "axios";
 import https from 'https';
 
 import { configDotenv } from 'dotenv';
@@ -69,10 +69,22 @@ async function downloadFile(name) {
     // Get the download URL
     const url = await getDownloadURL(storageRef);
     console.log(url);
-    await downloadFileURL(url, name);
+    //await downloadFileURL(url, name);
+
+    //axois downloads the data for us, using https, so we don't have to.
+    axios.get(url).then((response) => { 
+        console.log(response.data);
+        fs.writeFileSync(name, response.data);
+    }
+    ).catch((error) => {
+        console.log(error);
+    });
+
+
 }
 
 
+//download the data from the url provided and save it to the file name provided.
 function downloadFileURL(url, dest) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(dest);
@@ -145,11 +157,11 @@ async function main() {
     await login("cosc4735@uwyo.edu", "123456");
 
     await uploadFile("img/B.png", "B.png", "image/png");
-    await uploadFile("img/C.jpg", "C.jpg", "image/jpg");
+   // await uploadFile("img/C.jpg", "C.jpg", "image/jpg");
 
     await listFiles();
     await downloadFile("B.png");
-    await deleteFile("B.png");  
+   // await deleteFile("B.png");  
     await logout();
 }
 

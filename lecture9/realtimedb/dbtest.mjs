@@ -38,6 +38,7 @@ firebase.auth().signInWithEmailAndPassword(email, password)
     });
     firebase.database().ref('/simple').on('value', (snapshot) => {
       const data = snapshot.val();
+      //data.simple  and data.second have the data.
       console.log(data);
     });
 
