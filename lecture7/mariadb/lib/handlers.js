@@ -16,7 +16,7 @@ exports.highScoreAddProcess = (req, res) => {
   const name = req.body.name || '', score = req.body.score || '';
   // input validation
   if( name == '' && score == '') {
-    console.log("name " + name + " or score "+ socre +"invalid"); 
+    console.log("name " + name + " or score "+ score +"invalid"); 
     return res.redirect(303, '/highscore-add');
   }
   //add the data to database, then redirect to home page?  add page?  
@@ -44,7 +44,7 @@ exports.highScoreUpdateProcess = async (req, res) => {
   const name = req.body.name || '', score = req.body.score || '';
   // input validation
   if( name == '' && score == '') {
-    console.log("name " + name + " or score "+ socre +"invalid"); 
+    console.log("name " + name + " or score "+ score +"invalid"); 
     return res.redirect(303, '/highscore-update');
   }
   //add the data to database, then redirect to home page?  add page?  
