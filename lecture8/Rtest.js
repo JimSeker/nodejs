@@ -3,30 +3,32 @@
 //file used to test rest.
 
 const axios = require('axios');
-const mariadb = require("mariadb");
+
 
 //to test added.
-
-axios.post('http://localhost:3000/api/scores', {
-    name: 'test',
+async function main() {
+await axios.post('http://localhost:3000/api/scores', {
+    name: 'test4',
     score: '100'
 })
     .then(function (response) {
         console.log(response.data);
     })
     .catch(function (error) {
-        //console.log(error);
+        console.log(error);
     });
 
 
-axios.get('http://localhost:3000/api/scores').then(function (response) {    
+await axios.get('http://localhost:3000/api/scores').then(function (response) {    
     console.log(response.data);
 }
 ).catch(function (error) {
     console.log(error);
 });
 
-axios.get('http://localhost:3000/api/scores/test').then(function (response) {
+
+
+await axios.get('http://localhost:3000/api/scores/test').then(function (response) {
     console.log(response.data);
 }
 ).catch(function (error) {
@@ -35,7 +37,7 @@ axios.get('http://localhost:3000/api/scores/test').then(function (response) {
 
 
 
-axios.put('http://localhost:3000/api/scores/test', {
+await axios.put('http://localhost:3000/api/scores/test4', {
     score: '200'
 }).then(function (response) {
     console.log(response.data);
@@ -44,23 +46,29 @@ axios.put('http://localhost:3000/api/scores/test', {
     console.log(error);
 });
 
-axios.get('http://localhost:3000/api/scores').then(function (response) {    
+await axios.get('http://localhost:3000/api/scores').then(function (response) {    
     console.log(response.data);
 }
 ).catch(function (error) {
     console.log(error);
 });
 
-axios.delete('http://localhost:3000/api/scores/test').then(function (response) {
+await axios.delete('http://localhost:3000/api/scores/test4').then(function (response) {
     console.log(response.data);
 }
 ).catch(function (error) {
     console.log(error);
 });
 
-axios.get('http://localhost:3000/api/scores').then(function (response) {    
+await axios.get('http://localhost:3000/api/scores').then(function (response) {    
     console.log(response.data);
 }
 ).catch(function (error) {
     console.log(error);
 });
+
+
+
+}
+
+main();
