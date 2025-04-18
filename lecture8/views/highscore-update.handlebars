@@ -4,7 +4,8 @@
 {{#each listscores}}
   <div class="listscore">
     <form class="form-horizontal" role="form" action="/highscore-update/process" method="POST">
-    <input type=hidden name="name" value="{{name}}"> {{name}}
+    <input type=hidden name="id" value="{{id}}"> {{id}}
+    <input type="text" name="name" value="{{name}}">
     <input type="text" name="score" value="{{score}}">
     <button type"submit" >Update</button>
     </form>   

@@ -31,18 +31,19 @@ async function main() {
     let conn = await getConnection();
     if (conn) {
 
+        let tablename = "lecture8";
         //Drop Table IF Exists
-        await conn.query("DROP TABLE IF EXISTS highscore");
+        await conn.query("DROP TABLE IF EXISTS "+tablename);
         //Create Table
-        await conn.query("create table if not exists highscore ( name varchar(100) not null unique, score INT not null)");
+        await conn.query("create table if not exists "+tablename+" ( id int(11) primary key auto_increment, name varchar(100) not null, score INT not null)");
 
         //add some test data.
-        await conn.batch("INSERT INTO highscore(name, score) VALUES (?, ?) ", data);
+        await conn.batch("INSERT INTO "+tablename +" (name, score) VALUES (?, ?) ", data);
 
         //verifiy the data is there. 
-        var rows = await conn.query("SELECT name, score FROM highscore");
+        var rows = await conn.query("SELECT id, name, score FROM "+tablename);
         for (let i = 0, len = rows.length; i < len; i++) {
-            console.log(`${rows[i].name} ${rows[i].score}`);
+            console.log(`${rows[i].id} ${rows[i].name} ${rows[i].score}`);
         }
         conn.close();
     }

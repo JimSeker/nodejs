@@ -27,11 +27,11 @@ function closeConnection(conn) {
 
 //Get list of contacts
 function get_data(conn) {
-    return conn.query("SELECT name, score FROM highscore");
+    return conn.query("SELECT id, name, score FROM lecture8");
 }
 
 function add_data(conn, data) {
-    return conn.batch("INSERT INTO highscore(name, score) VALUES (?, ?) ", data);
+    return conn.batch("INSERT INTO lecture8(name, score) VALUES (?, ?) ", data);
 }
 
 
@@ -44,34 +44,34 @@ function add_data(conn, data) {
 //     if (conn) {  //connection worked
 //         await add_data(conn, score);
 //         var rows = await get_data(conn);
-//         // var rows = await conn.query("SELECT name, score FROM highscore");
+//         // var rows = await conn.query("SELECT id, name, score FROM lecture8");
 //         for (let i = 0, len = rows.length; i < len; i++) {
-//             console.log(`${rows[i].name} ${rows[i].score}`);
+//             console.log(`${rows[i].id ${rows[i].name} ${rows[i].score}`);
 //         }
 //         closeConnection(conn);
 //     }
 // }
 
 function del_data(conn, data) {
-    return conn.query("DELETE FROM highscore where name = ?", data);
+    return conn.query("DELETE FROM lecture8 where id = ?", data);
 }
 
 async function update_data(conn, data) {
-    return conn.query("UPDATE highscore SET score = ? WHERE name = ?", data)
+    return conn.query("UPDATE lecture8 SET score = ? name = ? WHERE id = ?", data)
 }
 async function main2() {
     let conn;
-    var score = [2006, "fred"];
-    var delscore = ["a"];
+    var score = [1, 2006, "fred"];
+    var delscore = [1];
 
     conn = await getConnection();
     if (conn) {
         await update_data(conn, score);
         await del_data(conn, delscore);
         var rows = await get_data(conn);
-        // var rows = await conn.query("SELECT name, score FROM highscore");
+        // var rows = await conn.query("SELECT id, name, score FROM lecture8");
         for (let i = 0, len = rows.length; i < len; i++) {
-            console.log(`${rows[i].name} ${rows[i].score}`);
+            console.log(`${rows[i].id} ${rows[i].name} ${rows[i].score}`);
         }
         closeConnection(conn);
     }

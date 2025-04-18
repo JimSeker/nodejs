@@ -38,6 +38,7 @@ app.get('/', async (req, res) => {
       row => {
         console.log("name is " + row.name);
         return { 
+          id: row.id,
           name: row.name,
           score: row.score,
         }
@@ -57,10 +58,6 @@ app.post('/highscore-update/process', handlers.highScoreUpdateProcess);
 app.get('/highscore-del', handlers.highScoredelete)
 app.post('/highscore-del/process', handlers.highScoredeleteProcess);
 
-//api endpoints, forms
-app.get('/api/highscore-add', apis.highScoreAdd);
-app.get('/api/highscore-del', apis.highScoreDel);
-app.get('/api/highscore-update', apis.highScoreUpdate);
 
 //api endpoints,
 //add
@@ -70,12 +67,9 @@ app.get('/api/scores', apis.highScoreGet);
 //get one score
 app.get('/api/scores/:name', apis.highScoreGetOne);
 //delete a score
-app.delete('/api/scores/:name', apis.highScoredeleteProcess);
+app.delete('/api/scores/:id', apis.highScoredeleteProcess);
 //update a score
-app.put('/api/scores/:name', apis.highScoreUpdateProcess);
-
-app.post('/api/scores/delete/:name', apis.highScoredeleteProcess);
-app.post('/api/scores/update/:name', apis.highScoreUpdateProcess);
+app.put('/api/scores/:id', apis.highScoreUpdateProcess);
 
 
 app.use(handlers.notFound);

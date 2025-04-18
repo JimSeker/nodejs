@@ -1,18 +1,6 @@
 "use strict";
 const db = require('../db');
 
-exports.highScoreAdd = (req, res) => {
-    res.render('api-add')
-};
-
-exports.highScoreDel = (req, res) => {
-    res.render('api-delete')
-}
-
-;exports.highScoreUpdate = (req, res) => {
-    res.render('api-update')
-};
-
 exports.highScoreAddProcess = (req, res) => {
     console.log("api add name is " + req.body.name + " score is " + req.body.score);
     const name = req.body.name || '', score = req.body.score || '';
@@ -23,7 +11,7 @@ exports.highScoreAddProcess = (req, res) => {
     }
     //add the data to database, then redirect to home page?  add page?  
     db.addData(name, score);
-    return res.status(201).json({ error: false, message: name + " added" });
+    return res.status(201).json({ error: false, message: id + " " + name + " added" });
 };
 
 exports.highScoreGet = async (req, res) => {
@@ -33,38 +21,43 @@ exports.highScoreGet = async (req, res) => {
 }
 
 exports.highScoreGetOne = async (req, res) => {
-    const name = req.params.name;
-    console.log("name is " + name);
-    const scoredata = await db.getDataByName(name) ;
+    const name = req.params.name || '';
+
+    if (name == '') {
+        console.log("name is " + name);
+        return res.status(200).json({ error: true, message: "Invalid input" });
+    }
+    const scoredata = await db.getDataByName(name);
 
     if (scoredata.length > 0) {
-        return res.status(200).json({error: false, data: scoredata});
+        return res.status(200).json({ error: false, data: scoredata });
     } else {
         return res.status(200).json({ error: true, message: "Name not found" });
     }
 }
 
 exports.highScoredeleteProcess = async (req, res) => {
- const name = req.params.name || '';
- console.log("name is " + name);
- // input validation
- if( name == '' ) {
-   console.log("del name " + name + "invalid"); 
-   return res.status(200).json({ error: true, message: "Invalid input" });
- }
- 
- let ret = await db.deleteData(name);
- return res.status(200).json({ error: false, message: "number of deleted is " + ret });
+    const id = req.params.id || '';
+    console.log("id is " + id);
+    // input validation
+    if (id == '') {
+        console.log("del id " + id + "invalid");
+        return res.status(200).json({ error: true, message: "Invalid input" });
+    }
+
+    let ret = await db.deleteData(id);
+    return res.status(200).json({ error: false, message: "number of deleted is " + ret });
 };
 
 exports.highScoreUpdateProcess = async (req, res) => {
-  const name = req.params.name || '';
-  const score = req.body.score || '';
-  // input validation
-  if( name == '' || score == '') {
-    console.log("name " + name + " or score "+ socre +"invalid"); 
-    return res.status(200).json({ error: true, message: "Invalid input" });
-  }
-  let ret = await db.updateData(name, score);
-  return res.status(200).json({ error: false, message: "number of updated is "+ret });
+    const id = req.params.id || '';
+    const name = req.body.name || '';
+    const score = req.body.score || '';
+    // input validation
+    if (id == "" || name == '' || score == '') {
+        console.log("id " + id + " name " + name + " or score " + score + " is invalid");
+        return res.status(200).json({ error: true, message: "Invalid input" });
+    }
+    let ret = await db.updateData(id, name, score);
+    return res.status(200).json({ error: false, message: "number of updated is " + ret });
 };

@@ -31,6 +31,7 @@ exports.highScoreUpdate = async (req, res) => {
       row => {
         console.log("name is " + row.name);
         return { 
+          id: row.id,
           name: row.name,
           score: row.score,
         }
@@ -41,14 +42,15 @@ exports.highScoreUpdate = async (req, res) => {
 };
 
 exports.highScoreUpdateProcess = async (req, res) => {
+  const id = req.body.id || '';
   const name = req.body.name || '', score = req.body.score || '';
   // input validation
-  if( name == '' && score == '') {
-    console.log("name " + name + " or score "+ socre +"invalid"); 
+  if( id == '' || name == '' || score == '') {
+    console.log("id " + id +" name " + name + " or score "+ score +"invalid"); 
     return res.redirect(303, '/highscore-update');
   }
   //add the data to database, then redirect to home page?  add page?  
-  await db.updateData(name, score);
+  await db.updateData(id, name, score);
   return res.redirect(303, '/')
 };
 
@@ -59,6 +61,7 @@ exports.highScoredelete = async (req, res) => {
      row => {
        console.log("name is " + row.name);
        return { 
+        id: row.id,
          name: row.name,
          score: row.score,
        }
@@ -69,14 +72,14 @@ exports.highScoredelete = async (req, res) => {
 };
 
 exports.highScoredeleteProcess = async (req, res) => {
- const name = req.body.name;
+ const id = req.body.id || '';
  // input validation
- if( name == '' ) {
-   console.log("name " + name + "invalid"); 
+ if( id == '' ) {
+   console.log("id  " + id + "invalid"); 
    return res.redirect(303, '/highscore-del');
  }
  //add the data to database, then redirect to home page?  add page?  
- await db.deleteData(name);
+ await db.deleteData(id);
  return res.redirect(303, '/')
 };
 
