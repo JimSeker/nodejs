@@ -1,15 +1,20 @@
 "use strict";
-const express = require('express');
-const { engine: expressHandlebars } = require('express-handlebars');
+import express from 'express';
+import { engine } from 'express-handlebars';
+import { default as bodyParser } from 'body-parser';
+//const expressSession = require('express-session');
+import { default as session } from 'express-session';
 
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const pokemon = require('pokemon');
+//const cookieParser = require('cookie-parser');
+import { default as cookieParser } from 'cookie-parser';
+//const pokemon = require('pokemon');
+import { default as pokemon } from 'pokemon';
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 // the following is needed to use views
-app.engine('handlebars', expressHandlebars({ defaultLayout: 'main' }));
+app.engine('handlebars', engine({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
 
 // the following is needed for cookie support
