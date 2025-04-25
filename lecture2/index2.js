@@ -1,5 +1,10 @@
 "use strict";
-const express = require('express');
+// the package.json file sets "type": "module" to use ES modules.  so .jms file extensions
+// are not required.
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
+//const express = require('express');
+import express from 'express';
 const app = express();
 const port = process.env.PORT || 3000;
 

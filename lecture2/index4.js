@@ -1,15 +1,27 @@
 "use strict";
-const express = require('express');
-const { engine: expressHandlebars } = require('express-handlebars');
+// the package.json file sets "type": "module" to use ES modules.  so .jms file extensions
+// are not required.
+
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
+//const express = require('express');
+import express from 'express';
+import { engine } from 'express-handlebars';
 
 const app = express();
 
 // configure Handlebars view engine
-app.engine('handlebars', expressHandlebars({
+app.engine('handlebars', engine({
   defaultLayout: 'main',
 }));
 app.set('view engine', 'handlebars');
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(express.static(__dirname + '/public'));
 
 const port = process.env.PORT || 3000;
