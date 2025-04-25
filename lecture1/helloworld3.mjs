@@ -1,7 +1,14 @@
 "use strict";
-const http = require('http');
-const fs = require('fs');
+import { default as http } from 'http';  //ES6 module format.
+import * as fs from 'fs';
 const port = process.env.PORT || 3000;
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function serveStaticFile(res, path, contentType, responseCode = 200) {
   fs.readFile(__dirname + path, (err, data) => {

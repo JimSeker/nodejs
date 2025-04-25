@@ -1,6 +1,6 @@
 "use strict";
 
-const http = require('http');
+import { default as http } from 'http';  //ES6 module format.
 const port = process.env.PORT || 3000;
 
 
