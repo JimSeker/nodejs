@@ -1,12 +1,12 @@
 "use strict";
-const express = require('express');
-const { engine: expressHandlebars } = require('express-handlebars');
-const bodyParser = require('body-parser');
+import express from 'express';
+import { engine } from 'express-handlebars';
+import { default as bodyParser } from 'body-parser';
 const app = express();
 const port = process.env.PORT || 3000;
 
 // the following is needed to use views
-app.engine('handlebars', expressHandlebars({ defaultLayout: 'main' }));
+app.engine('handlebars', engine({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
 
 // this is necessary to parse form responses
