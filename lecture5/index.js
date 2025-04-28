@@ -1,4 +1,6 @@
 "use strict";
+// note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
+
 import express from 'express';
 import { engine } from 'express-handlebars';
 import { default as bodyParser } from 'body-parser';

@@ -1,4 +1,4 @@
-
+// note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
 export var api = {}
 
 export const home = (req, res) => res.render('home')
