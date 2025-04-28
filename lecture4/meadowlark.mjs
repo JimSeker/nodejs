@@ -1,14 +1,25 @@
 "use strict";
-const express = require('express');
-const expressHandlebars = require('express-handlebars').engine;
+// const express = require('express');
+// const expressHandlebars = require('express-handlebars').engine;
+import express from 'express';
+import { engine } from 'express-handlebars';
 
-const handlers = require('./lib/handlers');
-const weatherMiddlware = require('./lib/middleware/weather');
+//const handlers = require('./lib/handlers')
+import * as handlers from './lib/handlers.js'
+//const weatherMiddlware = require('./lib/middleware/weather')
+import weatherMiddlware from './lib/middleware/weather.js'
+
+
+// Create __dirname equivalent for ES modules
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 // configure Handlebars view engine
-app.engine('handlebars', expressHandlebars({
+app.engine('handlebars', engine({
   defaultLayout: 'main',
   helpers: {
     section: function(name, options) {
@@ -32,11 +43,11 @@ app.get('/section-test', handlers.sectionTest);
 app.use(handlers.notFound);
 app.use(handlers.serverError);
 
-if(require.main === module) {
+// if(main === module) {
   app.listen(port, () => {
     console.log( `Express started on http://localhost:${port}` +
       '; press Ctrl-C to terminate.' )
   })
-} else {
-  module.exports = app
-}
+// } else {
+//   module.exports = app
+// }
