@@ -1,14 +1,7 @@
 "use strict";
 
 //file used to test rest.
-
-const axios = require('axios');
-const readline = require('node:readline');
-
-let r1 = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
+import axios from 'axios';
 
 //to test added.
 async function main() {

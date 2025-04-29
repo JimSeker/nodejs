@@ -1,7 +1,7 @@
 "use strict";
-const db = require('../db');
+import db from '../db.js';
 
-exports.highScoreAddProcess = (req, res) => {
+export const highScoreAddProcess = (req, res) => {
     console.log("api add name is " + req.body.name + " score is " + req.body.score);
     const name = req.body.name || '', score = req.body.score || '';
     // input validation
@@ -14,13 +14,13 @@ exports.highScoreAddProcess = (req, res) => {
     return res.status(201).json({ error: false, message: id + " " + name + " added" });
 };
 
-exports.highScoreGet = async (req, res) => {
+export const highScoreGet = async (req, res) => {
     const scoredata = await db.getData();
     //finally render the page with the data, hopefully
     res.status(200).json({ error: false, data: scoredata });
 }
 
-exports.highScoreGetOne = async (req, res) => {
+export const highScoreGetOne = async (req, res) => {
     const name = req.params.name || '';
 
     if (name == '') {
@@ -36,7 +36,7 @@ exports.highScoreGetOne = async (req, res) => {
     }
 }
 
-exports.highScoredeleteProcess = async (req, res) => {
+export const highScoredeleteProcess = async (req, res) => {
     const id = req.params.id || '';
     console.log("id is " + id);
     // input validation
@@ -49,7 +49,7 @@ exports.highScoredeleteProcess = async (req, res) => {
     return res.status(200).json({ error: false, message: "number of deleted is " + ret });
 };
 
-exports.highScoreUpdateProcess = async (req, res) => {
+export const highScoreUpdateProcess = async (req, res) => {
     const id = req.params.id || '';
     const name = req.body.name || '';
     const score = req.body.score || '';
@@ -60,4 +60,12 @@ exports.highScoreUpdateProcess = async (req, res) => {
     }
     let ret = await db.updateData(id, name, score);
     return res.status(200).json({ error: false, message: "number of updated is " + ret });
+};
+
+export default {
+    highScoreAddProcess,
+    highScoreGet,
+    highScoreGetOne,
+    highScoredeleteProcess,
+    highScoreUpdateProcess
 };

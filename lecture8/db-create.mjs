@@ -1,6 +1,7 @@
 "use strict";
-const mariadb = require("mariadb");
-require("dotenv").config();
+import mariadb from "mariadb";
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
 
 async function getConnection() {
     let conn;
@@ -10,7 +11,7 @@ async function getConnection() {
             port: process.env.MDB_PORT,
             user: process.env.MDB_USER,
             password: process.env.MDB_PASS,
-            database: "cosc4735",
+            database: process.env.MDB_DB,
         });
     } catch (err) {
         console.log("SQL error in establishing a connection: ", err);

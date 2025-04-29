@@ -1,6 +1,7 @@
 "use strict";
-const mariadb = require("mariadb");
-require("dotenv").config();
+import mariadb from "mariadb";
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
 
 async function getConnection() {
     let conn;
@@ -10,7 +11,7 @@ async function getConnection() {
             port: process.env.MDB_PORT,
             user: process.env.MDB_USER,
             password: process.env.MDB_PASS,
-            database: "cosc4735",
+            database: process.env.MDB_DB,
         });
     } catch (err) {
         console.log("SQL error in establishing a connection: ", err);
@@ -30,7 +31,7 @@ function add_data(conn, data) {
     return conn.batch("INSERT INTO lecture8(name, score) VALUES (?, ?) ", data);
 }
 //open db, add the data, then close it.
-async function addData (name, number)  {
+export async function addData (name, number)  {
     var score = [name, number];
     let conn = await getConnection();
     if (conn) {
@@ -45,7 +46,7 @@ function get_data(conn) {
     return conn.query("SELECT id, name, score FROM lecture8");
 }
 //get the data function opens the db, gets the data, then closes the db.
-async function getData ()  {
+export async function getData ()  {
     let conn = await getConnection();
     if (conn) {
         const rows = await get_data(conn);
@@ -61,7 +62,7 @@ function get_data_byName(conn, name) {
     return conn.query("SELECT id, name, score FROM lecture8 where name = ?", name);
 }
 //get the data function opens the db, gets the data, then closes the db.
-async function getDataByName (name)  {
+export async function getDataByName (name)  {
     let conn = await getConnection();
     if (conn) {
         const rows = await get_data_byName(conn, name);
@@ -73,12 +74,12 @@ async function getDataByName (name)  {
 };
 
 //helper funciton to update code
-async function update_data(conn, data) {
+function update_data(conn, data) {
     return conn.query("UPDATE lecture8 SET score = ?, name = ? WHERE id = ?", data)
 }
 
 //actual update database code. 
-async function updateData (id, name, number)  {
+export async function updateData (id, name, number)  {
     var score = [number, name, id];  //yes, it's reversed, from add, because order it's used.
     let conn = await getConnection();
     if (conn) {
@@ -93,7 +94,7 @@ function del_data(conn, data) {
     return conn.query("DELETE FROM lecture8 where id = ?", data);
 }
 //actual delete database code.
-async function deleteData (id)  {
+export async function deleteData (id)  {
     var value = [id];  //yes, needs to be in an array.
     let conn = await getConnection();
     if (conn) {
@@ -104,4 +105,4 @@ async function deleteData (id)  {
 };
 
 //only 4 funcitons are exported and can be used by the handler.js or index.js code.
-module.exports = {getData, addData, updateData, deleteData, getDataByName};
+export default {getData, addData, updateData, deleteData, getDataByName};

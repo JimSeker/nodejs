@@ -27,7 +27,9 @@ exit mysql, we don't need root anymore
 mysql -u mobileapp -p
 
 connect cosc4735
-create table if not exists highscore ( name varchar(100) not null unique, score INT not null);
+create table if not exists lecture 8 ( id int(11) primary key auto_increment, name varchar(100) not null, score INT not null)
+There is a db-create.mjs file that will create the database and add sample data. it makes much simplier.
+
 
 cmd:
  npm init -y
