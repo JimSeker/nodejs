@@ -1,5 +1,6 @@
 "use strict";
-const fs = require('fs');
+//const fs = require('fs');
+import fs from 'fs';
 
 let data = "hello world\n";
 let appenddata = "next line\n";

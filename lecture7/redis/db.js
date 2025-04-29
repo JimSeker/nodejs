@@ -1,8 +1,9 @@
 "use strict";
-var redis = require('redis');
+
+import redis from 'redis';
 
 //this funciton reutnrs an array of data (ie the list) from the key.
-async function getData(key) {
+export async function getData(key) {
     const client = redis.createClient();
 
     client.connect();
@@ -29,7 +30,7 @@ async function getData(key) {
 }
 
 // Function takes a key and score and adds the score to the key as a list.
-async function addData(key, score) {
+export async function addData(key, score) {
     const client = redis.createClient();
     client.connect();
     client.on('error', err => { console.log('Redis Client Error', err); return; });
@@ -50,7 +51,7 @@ async function addData(key, score) {
 }
 
 //funcitron removes the first item from the list.  it doesn't actually delete the key.
-async function deleteData(key) {
+export async function deleteData(key) {
     const client = redis.createClient();
 
     client.connect();
@@ -66,7 +67,7 @@ async function deleteData(key) {
 }
 
 //returns a list of all keys that are of type list.
-async function getAllListKeys() {
+export async function getAllListKeys() {
     const client = redis.createClient();
     client.connect();
     client.on('error', err => { console.log('Redis Client Error', err); return; });
@@ -92,7 +93,7 @@ async function getAllListKeys() {
 
 
 //only 4 funcitons are exported and can be used by the handler.js or index.js code.
-module.exports = { getData, addData, deleteData, getAllListKeys };
+export default { getData, addData, deleteData, getAllListKeys };
 
 
 

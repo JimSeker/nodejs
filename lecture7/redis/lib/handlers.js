@@ -1,11 +1,11 @@
 "use strict";
-const db = require('../db');
+import db from '../db.js';
 
-exports.scoreAdd = (req, res) => {
+export const scoreAdd = (req, res) => {
   res.render('score-add', { username: req.cookies.username })
 };
 
-exports.scoreAddProcess = (req, res) => {
+export const scoreAddProcess = (req, res) => {
   const name = req.body.name || '', score = req.body.score || '';
   // input validation
   if (name == '' || score == '') {
@@ -17,7 +17,7 @@ exports.scoreAddProcess = (req, res) => {
   return res.redirect(303, '/')
 };
 
-exports.scoreOther = async (req, res) => {
+export const scoreOther = async (req, res) => {
 
   const keys = await db.getAllListKeys();
   //console.log(keys);
@@ -47,7 +47,7 @@ exports.scoreOther = async (req, res) => {
 };
 
 
-exports.scoreDelete = async (req, res) => {
+export const scoreDelete = async (req, res) => {
 
   const username = req.cookies.username;
   if (username != "") {
@@ -58,10 +58,12 @@ exports.scoreDelete = async (req, res) => {
 };
 
 
-exports.notFound = (req, res) => res.render('404');
+export const notFound = (req, res) => res.render('404');
 
 // Express recognizes the error handler by way of its four
 // argumetns, so we have to disable ESLint's no-unused-vars rule
 /* eslint-disable no-unused-vars */
-exports.serverError = (err, req, res, next) => res.render('500');
+export const serverError = (err, req, res, next) => res.render('500');
 /* eslint-enable no-unused-vars */
+
+export default { scoreAdd, scoreAddProcess, scoreDelete, scoreOther, notFound, serverError };
