@@ -1,21 +1,33 @@
 "use strict";
-const express = require('express');
-const expressHandlebars = require('express-handlebars').engine;
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const expressSession = require('express-session');
+// note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
+import express from 'express';
+import { engine } from 'express-handlebars';
+import { default as bodyParser } from 'body-parser';
 
-const credentials = require('./credentials');
-const handlers = require('./lib/handlers');
-const weatherMiddlware = require('./lib/middleware/weather');
-const flashMiddleware = require('./lib/middleware/flash');
-const pokemon = require('pokemon');
+import cookieParser from 'cookie-parser';
+import { default as expressSession } from 'express-session';
+
+import { default as handlers }  from './lib/handlers.js';
+import { weatherMiddleware } from './lib/middleware/weather.js';
+
+import { flashMiddleware } from './lib/middleware/flash.js';
+import * as pokemon from 'pokemon';
+
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // configure Handlebars view engine
-app.engine('handlebars', expressHandlebars({
+app.engine('handlebars', engine({
   defaultLayout: 'main',
   helpers: {
     section: function (name, options) {
@@ -29,17 +41,17 @@ app.set('view engine', 'handlebars');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-console.log("secret is" + credentials.cookieSecret);
-app.use(cookieParser(credentials.cookieSecret));
+console.log("secret is" + process.env.cookieSecret);
+app.use(cookieParser(process.env.cookieSecret));
 app.use(expressSession({
   resave: false,
   saveUninitialized: false,
-  secret: credentials.cookieSecret,
+  secret: process.env.cookieSecret,
 }));
 
 app.use(express.static(__dirname + '/public'));
 
-app.use(weatherMiddlware);
+app.use(weatherMiddleware);
 app.use(flashMiddleware);
 
 //this moved from handlers.js to here, use to avoid redeclaring all cookie and session variables.

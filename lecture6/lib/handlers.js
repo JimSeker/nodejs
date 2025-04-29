@@ -18,14 +18,14 @@ class NewsletterSignup {
   }
 }
 
-exports.newsletterSignup = (req, res) => {
+export const newsletterSignup = (req, res) => {
   // we will learn about CSRF later...for now, we just
   // provide a dummy value
   res.render('newsletter-signup', { username: req.session.username, csrf: 'CSRF token goes here' })
 }
 
 
-exports.newsletterSignupProcess = (req, res) => {
+export const newsletterSignupProcess = (req, res) => {
   const name = req.body.name || '', email = req.body.email || ''
   // input validation
   if(!VALID_EMAIL_REGEX.test(email)) {
@@ -58,13 +58,15 @@ exports.newsletterSignupProcess = (req, res) => {
       return res.redirect(303, '/newsletter-archive')
     })
 }
-exports.newsletterSignupThankYou = (req, res) => res.render('newsletter-signup-thank-you')
-exports.newsletterArchive = (req, res) => res.render('newsletter-archive')
+export const newsletterSignupThankYou = (req, res) => res.render('newsletter-signup-thank-you')
+export const newsletterArchive = (req, res) => res.render('newsletter-archive')
 
-exports.notFound = (req, res) => res.render('404')
+export const notFound = (req, res) => res.render('404')
 
 // Express recognizes the error handler by way of its four
 // argumetns, so we have to disable ESLint's no-unused-vars rule
 /* eslint-disable no-unused-vars */
-exports.serverError = (err, req, res, next) => res.render('500')
+export const serverError = (err, req, res, next) => res.render('500')
 /* eslint-enable no-unused-vars */
+
+export default { newsletterSignup, newsletterSignupProcess,  newsletterSignupThankYou,  newsletterArchive,  notFound,  serverError }

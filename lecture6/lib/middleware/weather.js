@@ -1,3 +1,4 @@
+// note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
 const getWeatherData = () => [
   {
     location: {
@@ -28,10 +29,10 @@ const getWeatherData = () => [
   },
 ]
 
-const weatherMiddleware = (req, res, next) => {
+export const weatherMiddleware = (req, res, next) => {
   if(!res.locals.partials) res.locals.partials = {}
   res.locals.partials.weatherContext = getWeatherData()
   next()
 }
 
-module.exports = weatherMiddleware
+export default { weatherMiddleware };
