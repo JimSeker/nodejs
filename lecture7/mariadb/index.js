@@ -1,18 +1,27 @@
 "use strict";
-const express = require('express');
-const expressHandlebars = require('express-handlebars').engine;
-const bodyParser = require('body-parser');
-require("dotenv").config()
+// note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
+import express from 'express';
+import { engine } from 'express-handlebars';
+import { default as bodyParser } from 'body-parser';
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
 
-const handlers = require('./lib/handlers');
-const db = require('./db');
+import { default as handlers } from './lib/handlers.js';
+import { default as db } from './db.js';
 
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // configure Handlebars view engine
-app.engine('handlebars', expressHandlebars({defaultLayout: 'main'  }));
+app.engine('handlebars', engine({defaultLayout: 'main'  }));
 app.set('view engine', 'handlebars');
 
 app.use(bodyParser.urlencoded({ extended: true }));

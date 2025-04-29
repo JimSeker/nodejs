@@ -1,5 +1,6 @@
 "use strict";
-const db = require('../db');
+//const db = require('../db');
+import db from '../db.js';
 
 // slightly modified version of the official W3C HTML5 email regex:
 // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
@@ -8,11 +9,11 @@ const VALID_EMAIL_REGEX = new RegExp('^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@' +
   '(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$');
 
 
-exports.highScoreAdd = (req, res) => {
+export const highScoreAdd = (req, res) => {
   res.render('highscore-add', {} )
 };
 
-exports.highScoreAddProcess = (req, res) => {
+export const highScoreAddProcess = (req, res) => {
   const name = req.body.name || '', score = req.body.score || '';
   // input validation
   if( name == '' && score == '') {
@@ -24,7 +25,7 @@ exports.highScoreAddProcess = (req, res) => {
   return res.redirect(303, '/')
 };
 
-exports.highScoreUpdate = async (req, res) => {
+export const highScoreUpdate = async (req, res) => {
    const scoredata =  await db.getData();
    //create the context variable with correct obj names hopefully.
    const context = { listscores:  scoredata.map (
@@ -40,7 +41,7 @@ exports.highScoreUpdate = async (req, res) => {
    res.render('highscore-update', context);
 };
 
-exports.highScoreUpdateProcess = async (req, res) => {
+export const highScoreUpdateProcess = async (req, res) => {
   const name = req.body.name || '', score = req.body.score || '';
   // input validation
   if( name == '' && score == '') {
@@ -52,7 +53,7 @@ exports.highScoreUpdateProcess = async (req, res) => {
   return res.redirect(303, '/')
 };
 
-exports.highScoredelete = async (req, res) => {
+export const highScoredelete = async (req, res) => {
   const scoredata =  await db.getData();
   //create the context variable with correct obj names hopefully.
   const context = { listscores:  scoredata.map (
@@ -68,7 +69,7 @@ exports.highScoredelete = async (req, res) => {
   res.render('highscore-del', context);
 };
 
-exports.highScoredeleteProcess = async (req, res) => {
+export const highScoredeleteProcess = async (req, res) => {
  const name = req.body.name;
  // input validation
  if( name == '' ) {
@@ -81,10 +82,12 @@ exports.highScoredeleteProcess = async (req, res) => {
 };
 
 
-exports.notFound = (req, res) => res.render('404');
+export const notFound = (req, res) => res.render('404');
 
 // Express recognizes the error handler by way of its four
 // argumetns, so we have to disable ESLint's no-unused-vars rule
 /* eslint-disable no-unused-vars */
-exports.serverError = (err, req, res, next) => res.render('500');
+export const serverError = (err, req, res, next) => res.render('500');
 /* eslint-enable no-unused-vars */
+
+export default { highScoreAdd, highScoreAddProcess, highScoreUpdate, highScoreUpdateProcess, highScoredelete, highScoredeleteProcess, notFound, serverError };

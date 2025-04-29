@@ -1,8 +1,9 @@
 "use strict";
-const mariadb = require("mariadb");
-require("dotenv").config();
+import mariadb from "mariadb";
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
 
-async function getConnection() {
+export async function getConnection() {
     let conn;
     try {
         conn = await mariadb.createConnection({
@@ -10,7 +11,7 @@ async function getConnection() {
             port: process.env.MDB_PORT,
             user: process.env.MDB_USER,
             password: process.env.MDB_PASS,
-            database: "cosc4735",
+            database: process.env.MDB_DB,
         });
     } catch (err) {
         console.log("SQL error in establishing a connection: ", err);
@@ -30,7 +31,7 @@ function add_data(conn, data) {
     return conn.batch("INSERT INTO highscore(name, score) VALUES (?, ?) ", data);
 }
 //open db, add the data, then close it.
-async function addData (name, number)  {
+export async function addData (name, number)  {
     var score = [name, number];
     let conn = await getConnection();
     if (conn) {
@@ -45,7 +46,7 @@ function get_data(conn) {
     return conn.query("SELECT name, score FROM highscore");
 }
 //get the data function opens the db, gets the data, then closes the db.
-async function getData ()  {
+export async function getData ()  {
     let conn = await getConnection();
     if (conn) {
         const rows = await get_data(conn);
@@ -62,7 +63,7 @@ async function update_data(conn, data) {
 }
 
 //actual update database code. 
-async function updateData (name, number)  {
+export async function updateData (name, number)  {
     var score = [number, name];  //yes, it's reversed, from add, because order it's used.
     let conn = await getConnection();
     if (conn) {
@@ -76,7 +77,7 @@ function del_data(conn, data) {
     return conn.query("DELETE FROM highscore where name = ?", data);
 }
 //actual delete database code.
-async function deleteData (name)  {
+export async function deleteData (name)  {
     var value = [name];  //yes, needs to be in an array.
     let conn = await getConnection();
     if (conn) {
@@ -86,4 +87,4 @@ async function deleteData (name)  {
 };
 
 //only 4 funcitons are exported and can be used by the handler.js or index.js code.
-module.exports = {getData, addData, updateData, deleteData};
+export default {getData, addData, updateData, deleteData};
