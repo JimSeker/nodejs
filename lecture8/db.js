@@ -104,5 +104,5 @@ export async function deleteData (id)  {
     }
 };
 
-//only 4 funcitons are exported and can be used by the handler.js or index.js code.
+//only 5 funcitons are exported and can be used by the handler.js or index.js code.
 export default {getData, addData, updateData, deleteData, getDataByName};
