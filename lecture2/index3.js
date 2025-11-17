@@ -3,7 +3,6 @@
 // are not required.
 import { configDotenv } from 'dotenv';
 configDotenv(); //load the env file
-//const express = require('express');
 import express from 'express';
 import { engine } from 'express-handlebars';
 
