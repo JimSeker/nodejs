@@ -1,6 +1,9 @@
 "use strict";
 import { default as http } from 'http';  //ES6 module format.
-import * as fs from 'fs';
+
+import fs from 'fs';  //ES6 module format.
+//import * as fs from 'fs';
+
 const port = process.env.PORT || 3000;
 
 import path from 'path';
