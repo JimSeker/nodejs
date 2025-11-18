@@ -10,8 +10,11 @@ import { default as cookieParser } from 'cookie-parser';
 //const pokemon = require('pokemon');
 import { default as pokemon } from 'pokemon';
 
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
+
 const app = express();
-const port = process.env.PORT || 3000;
+
 
 // the following is needed to use views
 app.engine('handlebars', engine({ defaultLayout: 'main' }));
@@ -45,4 +48,5 @@ app.get('/set-random-username', (req, res) => {
 
 app.get('*', (req, res) => res.send('Check out our <a href="/greeting">greeting</a> page!'));
 
+const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`\nnavigate to http://localhost:${port}/greeting\n`));

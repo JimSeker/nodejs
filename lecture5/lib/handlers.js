@@ -1,46 +1,98 @@
-// note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
-export var api = {}
+"use strict";
+import db from '../db.js';
 
-export const home = (req, res) => res.render('home')
+// handlers for browser-based form submission
+export const highScoreAdd = (req, res) => {
+  res.render('highscore-add', {} )
+};
 
-// **** these handlers are for browser-submitted forms
-export const newsletterSignup = (req, res) => {
-  // we will learn about CSRF later...for now, we just
-  // provide a dummy value
-  res.render('newsletter-signup', { csrf: 'CSRF token goes here' })
-}
-export const newsletterSignupProcess = (req, res) => {
-  console.log('CSRF token (from hidden form field): ' + req.body._csrf)
-  console.log('Name (from visible form field): ' + req.body.name)
-  console.log('Email (from visible form field): ' + req.body.email)
-  res.redirect(303, '/newsletter-signup/thank-you')
-}
-export const newsletterSignupThankYou = (req, res) => res.render('newsletter-signup-thank-you')
-// **** end browser-submitted form handlers
+export const highScoreAddProcess = (req, res) => {
+  const name = req.body.name || '', score = req.body.score || '';
+  // input validation
+  if( name == '' && score == '') {
+    console.log("name " + name + " or score "+ socre +"invalid"); 
+    return res.redirect(303, '/highscore-add');
+  }
+  //add the data to database, then redirect to home page?  add page?  
+  db.addData(name, score);
+  return res.redirect(303, '/')
+};
+
+export const highScoreUpdate = async (req, res) => {
+   const scoredata =  await db.getData();
+   //create the context variable with correct obj names hopefully.
+   const context = { listscores:  scoredata.map (
+      row => {
+        console.log("name is " + row.name);
+        return { 
+          id: row.id,
+          name: row.name,
+          score: row.score,
+        }
+      }   
+   )};
+   //finally render the page with the data, hopefully
+   res.render('highscore-update', context);
+};
+
+export const highScoreUpdateProcess = async (req, res) => {
+  const id = req.body.id || '';
+  const name = req.body.name || '', score = req.body.score || '';
+  // input validation
+  if( id == '' || name == '' || score == '') {
+    console.log("id " + id +" name " + name + " or score "+ score +"invalid"); 
+    return res.redirect(303, '/highscore-update');
+  }
+  //add the data to database, then redirect to home page?  add page?  
+  await db.updateData(id, name, score);
+  return res.redirect(303, '/')
+};
+
+export const highScoredelete = async (req, res) => {
+  const scoredata =  await db.getData();
+  //create the context variable with correct obj names hopefully.
+  const context = { listscores:  scoredata.map (
+     row => {
+       console.log("name is " + row.name);
+       return { 
+        id: row.id,
+         name: row.name,
+         score: row.score,
+       }
+     }   
+  )};
+  //finally render the page with the data, hopefully
+  res.render('highscore-del', context);
+};
+
+export const highScoredeleteProcess = async (req, res) => {
+ const id = req.body.id || '';
+ // input validation
+ if( id == '' ) {
+   console.log("id  " + id + "invalid"); 
+   return res.redirect(303, '/highscore-del');
+ }
+ //add the data to database, then redirect to home page?  add page?  
+ await db.deleteData(id);
+ return res.redirect(303, '/')
+};
 
 
-
-// **** these handlers are for fetch/JSON form handlers
-export const newsletter = (req, res) => {
-  // we will learn about CSRF later...for now, we just
-  // provide a dummy value
-  res.render('newsletter', { csrf: 'CSRF token goes here' })
-}
-
-api.newsletterSignup = (req, res) => {
-  console.log('CSRF token (from hidden form field): ' + req.body._csrf)
-  console.log('Name (from visible form field): ' + req.body.name)
-  console.log('Email (from visible form field): ' + req.body.email)
-  res.send({ result: 'success' })
-}
-// **** end fetch/JSON form handlers
-
-export const notFound = (req, res) => res.render('404')
+export const notFound = (req, res) => res.render('404');
 
 // Express recognizes the error handler by way of its four
 // argumetns, so we have to disable ESLint's no-unused-vars rule
 /* eslint-disable no-unused-vars */
-export const serverError = (err, req, res, next) => res.render('500')
+export const serverError = (err, req, res, next) => res.render('500');
 /* eslint-enable no-unused-vars */
 
-export default { api, home, newsletterSignup, newsletterSignupProcess, newsletterSignupThankYou, newsletter, notFound, serverError }
+export default {
+  highScoreAdd,
+  highScoreAddProcess,
+  highScoreUpdate,
+  highScoreUpdateProcess,
+  highScoredelete,
+  highScoredeleteProcess,
+  notFound,
+  serverError
+};

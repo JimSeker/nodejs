@@ -2,8 +2,11 @@
 import express from 'express';
 import { engine } from 'express-handlebars';
 import { default as bodyParser } from 'body-parser';
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
+
 const app = express();
-const port = process.env.PORT || 3000;
+
 
 // the following is needed to use views
 app.engine('handlebars', engine({ defaultLayout: 'main' }));
@@ -22,5 +25,5 @@ app.post('/form-example', (req, res) => {
   res.redirect(303, '/thanks');
 });
 
-
+const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`\nnavigate to http://localhost:${port}\n`));

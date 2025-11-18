@@ -1,12 +1,14 @@
 "use strict";
 // note, package.json has "type": "module" to enable ES modules, so we don't need to use .mjs extension
-
 import express from 'express';
 import { engine } from 'express-handlebars';
 import { default as bodyParser } from 'body-parser';
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
 
-import { default as handlers }  from './lib/handlers.js';
-import { weatherMiddleware } from './lib/middleware/weather.js';
+import { default as handlers } from './lib/handlers.js';
+import { default as db } from './db.js';
+import { default as apis}  from './lib/api.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,7 +16,15 @@ import { fileURLToPath } from 'url';
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const app = express()
+
+//so web flutter can work.
+import cors from 'cors';
+
+
+const app = express();
+
+app.use(cors()); // Enable CORS for all routes, now web flutter can work with the APIs.
+const port = process.env.PORT || 3000;
 
 // configure Handlebars view engine
 app.engine('handlebars', engine({
@@ -32,29 +42,55 @@ app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const port = process.env.PORT || 3000
-
 app.use(express.static(__dirname + '/public'));
 
-app.use(weatherMiddleware);
+//most of this could be in the hanlders.js, but here just to show it. 
+app.get('/', async (req, res) => {
+   const scoredata =  await db.getData();
+   //create the context variable with correct obj names hopefully.
+   const context = { listscores:  scoredata.map (
+      row => {
+        console.log("name is " + row.name);
+        return { 
+          id: row.id,
+          name: row.name,
+          score: row.score,
+        }
+      }   
+   )};
+   console.log(context);
+   //finally render the page with the data, hopefully
+   res.render('home', context);
 
-app.get('/', handlers.home);
+});
 
 // handlers for browser-based form submission
-app.get('/newsletter-signup', handlers.newsletterSignup)
-app.post('/newsletter-signup/process', handlers.newsletterSignupProcess)
-app.get('/newsletter-signup/thank-you', handlers.newsletterSignupThankYou)
+app.get('/highscore-add', handlers.highScoreAdd)
+app.post('/highscore-add/process', handlers.highScoreAddProcess);
+app.get('/highscore-update', handlers.highScoreUpdate)
+app.post('/highscore-update/process', handlers.highScoreUpdateProcess);
+app.get('/highscore-del', handlers.highScoredelete)
+app.post('/highscore-del/process', handlers.highScoredeleteProcess);
 
-// handlers for fetch/JSON form submission
-app.get('/newsletter', handlers.newsletter)
-app.post('/api/newsletter-signup', handlers.api.newsletterSignup)
+
+//api endpoints,
+//add
+app.post('/api/scores', apis.highScoreAddProcess);
+//get all scores
+app.get('/api/scores', apis.highScoreGet);
+//get one score
+app.get('/api/scores/:name', apis.highScoreGetOne);
+//delete a score
+app.delete('/api/scores/:id', apis.highScoredeleteProcess);
+//update a score
+app.put('/api/scores/:id', apis.highScoreUpdateProcess);
 
 
-app.use(handlers.notFound)
-app.use(handlers.serverError)
+app.use(handlers.notFound);
+app.use(handlers.serverError);
 
 app.listen(port, () => {
   console.log(`Express started on http://localhost:${port}` +
-    '; press Ctrl-C to terminate.')
-})
+    '; press Ctrl-C to terminate.');
+});
 

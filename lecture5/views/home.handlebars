@@ -1,12 +1,13 @@
-<h2>Welcome</h2>
+<h2>Welcome to the high scores list</h2>
 
-<p>Welcome to Advanced Mobile!  Please sign up to our newsletter using either:</p>
-<ul>
-  <li><a href="/newsletter-signup">Old-school form submission</a>.</li>
-  <li><a href="/newsletter">Async form submission (uses client side js)</a>.</li>
-</ul>
-
-<p>(Note to reader: we would never actually give users silly choices this on a real website...this is just for you to see the difference!)</p>
-
-{{> weather}}
+<hr>
+{{#each listscores}}
+  <div class="listscore">
+   <p>{{id}}, {{name}}, {{score}}</p>  
+   </div>
+{{/each}}
+<hr>
+<br /><a href="/highscore-add">Add a new score</a>
+<br /><a href="/highscore-update">update a score</a>
+<br /><a href="/highscore-del">delete a score</a>
 
