@@ -4,7 +4,8 @@
 import express from 'express';
 import { engine } from 'express-handlebars';
 import { default as bodyParser } from 'body-parser';
-
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
 import { default as handlers }  from './lib/handlers.js';
 import { weatherMiddleware } from './lib/middleware/weather.js';
 
@@ -32,8 +33,6 @@ app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const port = process.env.PORT || 3000
-
 app.use(express.static(__dirname + '/public'));
 
 app.use(weatherMiddleware);
@@ -53,6 +52,7 @@ app.post('/api/newsletter-signup', handlers.api.newsletterSignup)
 app.use(handlers.notFound)
 app.use(handlers.serverError)
 
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Express started on http://localhost:${port}` +
     '; press Ctrl-C to terminate.')

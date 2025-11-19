@@ -24,7 +24,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
+
 
 // configure Handlebars view engine
 app.engine('handlebars', engine({
@@ -101,6 +101,7 @@ app.get('/newsletter-archive', handlers.newsletterSignupThankYou);
 app.use(handlers.notFound);
 app.use(handlers.serverError);
 
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Express started on http://localhost:${port}` +
     '; press Ctrl-C to terminate.');
