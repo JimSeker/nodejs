@@ -154,11 +154,11 @@ async function listFiles() {
 
 
 async function main() {
-    await login("cosc4735@uwyo.edu", "123456");
+   await login(process.env.FB_EMAIL, process.env.FB_PASSWORD);
 
     await uploadFile("img/B.png", "B.png", "image/png");
    // await uploadFile("img/C.jpg", "C.jpg", "image/jpg");
-
+ 
     await listFiles();
     await downloadFile("B.png");
    // await deleteFile("B.png");  
