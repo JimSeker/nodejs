@@ -1,21 +1,14 @@
 "use strict";
-//const express = require('express');
-import express from 'express';
 
-//const expressHandlebars = require('express-handlebars').engine;
+import express from 'express';
 import { engine } from 'express-handlebars';
-//const bodyParser = require('body-parser');
 import { default as bodyParser } from 'body-parser';
-//const expressSession = require('express-session');
 import { default as expressSession } from 'express-session';
-//require("dotenv").config();
 import { configDotenv } from 'dotenv';
 configDotenv(); //load the env file
 
 
-//const handlers = require('./lib/handlers');
 import { default as handlers } from './lib/handlers.js';
-
 import { default as db } from './db.mjs';
 
 import path from 'path';
@@ -26,7 +19,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
+
 
 // configure Handlebars view engine
 app.engine('handlebars', engine({
@@ -101,6 +94,7 @@ app.get('/logout', async (req, res) => {
 app.use(handlers.notFound);
 app.use(handlers.serverError);
 
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Express started on http://localhost:${port}` +
     '; press Ctrl-C to terminate.');

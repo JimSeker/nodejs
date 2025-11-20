@@ -1,22 +1,14 @@
 "use strict";
-//const express = require('express');
+
 import express from 'express';
-
-//const expressHandlebars = require('express-handlebars').engine;
 import { engine } from 'express-handlebars';
-//const bodyParser = require('body-parser');
 import { default as bodyParser } from 'body-parser';
-//const expressSession = require('express-session');
 import { default as expressSession } from 'express-session';
-
-//require("dotenv").config();
 import { configDotenv } from 'dotenv';
 configDotenv(); //load the env file
 
 
-//const handlers = require('./lib/handlers');
 import { default as handlers } from './lib/handlers.js';
-
 import { default as db } from './db.mjs';
 
 import path from 'path';

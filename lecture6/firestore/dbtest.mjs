@@ -96,6 +96,9 @@ signInWithEmailAndPassword(auth, email, password)
 
 
 /*
+// This code is the basic listener code from firebase docs, but makes no sense to use in a web server.  Test code only.
+// This would be better in a client side app.
+
 // const starCountRef = ref(db, 'messages/');
 // onValue(starCountRef, (snapshot) => {
 //   const data = snapshot.val();
