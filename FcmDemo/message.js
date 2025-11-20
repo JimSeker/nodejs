@@ -8,8 +8,7 @@
  */
 const https = require('https');
 const { google } = require('googleapis');
-require("dotenv").config();
-
+require("dotenv").config()
 const PROJECT_ID = process.env.PROJECT_ID;
 const HOST = 'fcm.googleapis.com';
 const PATH = '/v1/projects/' + PROJECT_ID + '/messages:send';

@@ -7,5 +7,5 @@ MDB_PASS = password
 MDB_DB = "database"
 #note database name needs to be in double quotes.
 cookieSecret = 'coming strength nothing half'
-PROJECT_ID = 'Firebase project name';
+PROJECT_ID = Firebase-project-name
 
