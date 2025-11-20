@@ -1,10 +1,19 @@
 "use strict";
 
-const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
-const { getMessaging } = require('firebase-admin/messaging');
-require("dotenv").config();
-const key = require('./serviceAccountKey.json');
-const msg = require('./message');
+//const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+//const { getMessaging } = require('firebase-admin/messaging');
+import { initializeApp, applicationDefault, cert } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
+
+import dotenv from 'dotenv';
+dotenv.config();
+//require("dotenv").config();
+
+import key from './serviceAccountKey.json' with { type: "json" };
+//const key = require('./serviceAccountKey.json');
+import msg from './message.js';
+//const msg = require('./message');
+
 const PROJECT_ID = process.env.PROJECT_ID;
 const app = initializeApp({
     //credential: applicationDefault( ),  //to use this, must have a env variable set up, export GOOGLE_APPLICATION_CREDENTIALS="./serviceAccountKey.json"
@@ -56,4 +65,4 @@ function sendTopic() {
 }
 
 //sendTopic();
-module.exports = { subscribeToTopic, unsubscribeFromTopic };
+export default { subscribeToTopic, unsubscribeFromTopic };

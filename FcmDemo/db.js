@@ -1,6 +1,8 @@
 "use strict";
-const mariadb = require("mariadb");
-require("dotenv").config();
+
+import mariadb from "mariadb";
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function getConnection() {
     let conn;
@@ -109,4 +111,4 @@ async function getToken (name) {
 
 
 //only 4 funcitons are exported and can be used by the handler.js or index.js code.
-module.exports = {getData, addData, updateData, deleteData, getToken};
+export default {getData, addData, updateData, deleteData, getToken};
