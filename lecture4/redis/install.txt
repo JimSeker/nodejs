@@ -1,0 +1,11 @@
+https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-on-linux/
+
+on a pi, skip the web pages
+    sudo apt-get install redis
+it even started it.
+
+
+npm install redis
+
+plus express and necessary pieces.
+

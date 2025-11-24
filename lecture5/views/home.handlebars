@@ -1,0 +1,13 @@
+<h2>Welcome to the high scores list</h2>
+
+<hr>
+{{#each listscores}}
+  <div class="listscore">
+   <p>{{id}}, {{name}}, {{score}}</p>  
+   </div>
+{{/each}}
+<hr>
+<br /><a href="/highscore-add">Add a new score</a>
+<br /><a href="/highscore-update">update a score</a>
+<br /><a href="/highscore-del">delete a score</a>
+

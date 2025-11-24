@@ -1,0 +1,40 @@
+
+install mariadb 
+  start it.  make sure you set the root password 
+
+  on pi's  for root:  sudo mysql -u root -p
+     sudo apt install mariadb-server
+     sudo mysql_secure_installation
+  otherwise sudo mysql -u user -p    
+    then enter the pasword for the user account
+
+Note: 
+you can change the username from mobileapp to something else
+the database name is named: cosc4735  (change it as you see fit)
+and don't use password as the password.   
+
+create database cosc4735;
+grant all privileges on cosc4735.* to 'mobileapp'@localhost identified by 'password' with grant option;
+
+notes:
+SET PASSWORD FOR 'bob'@'%' = PASSWORD('newpass');  //also global access
+If you want to delete a password for a user, you would do:
+SET PASSWORD FOR 'bob'@localhost = PASSWORD("");  //delete a local password.
+
+
+exit mysql, we don't need root anymore
+
+mysql -u mobileapp -p
+
+connect cosc4735
+create table if not exists lecture 8 ( id int(11) primary key auto_increment, name varchar(100) not null, score INT not null)
+There is a db-create.mjs file that will create the database and add sample data. it makes much simplier.
+
+
+cmd:
+ npm init -y
+ npm install express
+ npm install mariadb
+ npm install body-parse
+ npm install express-handlebars
+ npm install dotenv

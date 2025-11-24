@@ -1,0 +1,27 @@
+<h2>Welcome, Add your high score to the list</h2>
+
+<form class="form-horizontal" role="form"
+    action="/highscore-add/process" method="POST">
+  
+  <div class="form-group">
+    <label for="fieldName" class="col-sm-2 control-label">Name</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control" 
+      id="fieldName" name="name">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="fieldScore" class="col-sm-2 control-label">Score</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control"  required
+          id="fieldScore" name="score">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-4">
+      <button type="submit" class="btn btn-primary">add</button>
+    </div>
+  </div>
+</form>
+<hr>
+<br /><a href="/">Return to home</a>

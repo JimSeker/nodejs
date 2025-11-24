@@ -1,0 +1,14 @@
+<h2>Welcome to the note list, delete page.</h2>
+
+<hr>
+{{#each listscores}}
+  <div class="listscore">
+    <form class="form-horizontal" role="form" action="/db-del/process" method="POST">
+    <button type"submit" >Delete</button>
+    <input type=hidden name="key" value="{{key}}"> {{title}}, {{note}}
+    </form>   
+   </div>
+{{/each}}
+
+<hr>
+<br /><a href="/">Return to home</a>

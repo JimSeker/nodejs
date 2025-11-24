@@ -1,0 +1,27 @@
+<h2>Welcome, Add your Note the db.</h2>
+
+<form class="form-horizontal" role="form"
+    action="/db-add/process" method="POST">
+  
+  <div class="form-group">
+    <label for="fieldTitle" class="col-sm-2 control-label">Title</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control" 
+      id="fieldTitle" name="title">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="fieldNote" class="col-sm-2 control-label">Note</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control"  required
+          id="fieldNote" name="note">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-4">
+      <button type="submit" class="btn btn-primary">add</button>
+    </div>
+  </div>
+</form>
+<hr>
+<br /><a href="/">Return to home</a>

@@ -1,0 +1,13 @@
+<h2>{{username}}, Welcome to your scores list</h2>
+
+<hr>
+{{#each scoreinfo}}
+  <div class="listscore">
+   <p>{{score}}</p>  
+   </div>
+{{/each}}
+<hr>
+<br /><a href="/set-random-username">Get a new username</a>
+<br /><a href="/score-add">Add a new score</a>
+<br /><a href="/score-del">remove a score</a>
+<br /><a href="/score-others">list all players scores</a>

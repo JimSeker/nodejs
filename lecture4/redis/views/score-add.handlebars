@@ -1,0 +1,9 @@
+<h2>{{username}}, Add a score to your list</h2>
+
+<form class="form-horizontal" role="form" action="/score-add/process" method="POST">
+  <input type=hidden name="name" value="{{username}}">
+  <input type="text" name="score">
+  <button type"submit">add</button>
+</form>
+<hr>
+<br /><a href="/">Return to home</a>
