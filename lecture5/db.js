@@ -34,10 +34,14 @@ function add_data(conn, data) {
 export async function addData (name, number)  {
     var score = [name, number];
     let conn = await getConnection();
+    //console.log("Got connection");
+    let rt = 0;
     if (conn) {
-        await add_data(conn, score);
+        rt = await add_data(conn, score);
         closeConnection(conn);
     }
+   //console.log("Done!");
+   return rt;
 };
 
 

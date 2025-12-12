@@ -1,7 +1,7 @@
 "use strict";
 import db from '../db.js';
 
-export const highScoreAddProcess = (req, res) => {
+export const highScoreAddProcess = async (req, res) => {
     console.log("api add name is " + req.body.name + " score is " + req.body.score);
     const name = req.body.name || '', score = req.body.score || '';
     // input validation
@@ -10,8 +10,8 @@ export const highScoreAddProcess = (req, res) => {
         return res.status(200).json({ error: true, message: "Invalid input" });
     }
     //add the data to database, then redirect to home page?  add page?  
-    db.addData(name, score);
-    return res.status(201).json({ error: false, message: id + " " + name + " added" });
+    let b = await db.addData(name, score);
+    return res.status(201).json({ error: false, message: name + " added" });
 };
 
 export const highScoreGet = async (req, res) => {
