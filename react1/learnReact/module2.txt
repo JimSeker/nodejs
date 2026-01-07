@@ -1,0 +1,1634 @@
+MODULE 2: STATE AND EVENTS
+==========================
+
+2.1 STATE MANAGEMENT BASICS
+----------------------------
+
+What is State?
+--------------
+State is data that changes over time in a component. When state changes, React re-renders the component to reflect the new data.
+
+Key concepts:
+- State is private to a component
+- State changes trigger re-renders
+- Each component instance has its own state
+- State updates are asynchronous
+- Never modify state directly
+
+State vs Props:
+- Props: Passed from parent, read-only
+- State: Managed within component, can be changed
+
+
+The useState Hook
+-----------------
+
+useState is a React Hook that lets you add state to function components.
+
+1. Basic Syntax
+---------------
+```jsx
+import { useState } from 'react';
+
+function Counter() {
+  // Declare state variable
+  const [count, setCount] = useState(0);
+  //     ↑      ↑            ↑
+  //   value  setter    initial value
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+    </div>
+  );
+}
+```
+
+Components:
+- `count`: Current state value
+- `setCount`: Function to update state
+- `useState(0)`: Hook call with initial value
+- Array destructuring to get value and setter
+
+2. Multiple State Variables
+----------------------------
+```jsx
+function UserForm() {
+  const [name, setName] = useState('');
+  const [age, setAge] = useState(0);
+  const [email, setEmail] = useState('');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  
+  return (
+    <form>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Name"
+      />
+      <input
+        type="number"
+        value={age}
+        onChange={(e) => setAge(Number(e.target.value))}
+        placeholder="Age"
+      />
+      <input
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+      />
+      <label>
+        <input
+          type="checkbox"
+          checked={isSubscribed}
+          onChange={(e) => setIsSubscribed(e.target.checked)}
+        />
+        Subscribe to newsletter
+      </label>
+    </form>
+  );
+}
+```
+
+3. Different Initial Values
+----------------------------
+```jsx
+// String
+const [name, setName] = useState('John');
+
+// Number
+const [count, setCount] = useState(0);
+
+// Boolean
+const [isOpen, setIsOpen] = useState(false);
+
+// Array
+const [items, setItems] = useState([]);
+const [users, setUsers] = useState([
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' }
+]);
+
+// Object
+const [user, setUser] = useState({
+  name: '',
+  email: '',
+  age: 0
+});
+
+// Null/undefined
+const [data, setData] = useState(null);
+```
+
+4. Lazy Initial State
+----------------------
+When initial state requires expensive computation, use a function:
+
+```jsx
+// ❌ Runs on every render
+const [data, setData] = useState(expensiveCalculation());
+
+// ✅ Runs only once on mount
+const [data, setData] = useState(() => expensiveCalculation());
+
+// Example
+const [todos, setTodos] = useState(() => {
+  const savedTodos = localStorage.getItem('todos');
+  return savedTodos ? JSON.parse(savedTodos) : [];
+});
+```
+
+5. Reading State
+----------------
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Current count: {count}</p>
+      <p>Double: {count * 2}</p>
+      <p>Is positive: {count > 0 ? 'Yes' : 'No'}</p>
+    </div>
+  );
+}
+```
+
+6. Updating State
+-----------------
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  // Direct value
+  const increment = () => {
+    setCount(count + 1);
+  };
+  
+  // Functional update (recommended for updates based on previous state)
+  const incrementCorrect = () => {
+    setCount(prevCount => prevCount + 1);
+  };
+  
+  // Multiple updates
+  const incrementBy5 = () => {
+    // ❌ Wrong - only increments by 1
+    setCount(count + 1);
+    setCount(count + 1);
+    setCount(count + 1);
+    setCount(count + 1);
+    setCount(count + 1);
+    
+    // ✅ Correct - increments by 5
+    setCount(c => c + 1);
+    setCount(c => c + 1);
+    setCount(c => c + 1);
+    setCount(c => c + 1);
+    setCount(c => c + 1);
+  };
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={increment}>+1</button>
+      <button onClick={incrementCorrect}>+1 (Correct)</button>
+      <button onClick={incrementBy5}>+5</button>
+    </div>
+  );
+}
+```
+
+
+State Immutability
+------------------
+
+NEVER modify state directly! Always create new values.
+
+1. Why Immutability?
+--------------------
+- React compares old and new state by reference
+- Direct mutations don't trigger re-renders
+- Enables time-travel debugging
+- Prevents hard-to-track bugs
+- Required for proper React behavior
+
+2. Primitive Values
+-------------------
+Numbers, strings, booleans are automatically immutable:
+
+```jsx
+const [count, setCount] = useState(0);
+
+// ✅ Correct
+setCount(count + 1);
+setCount(10);
+
+const [name, setName] = useState('John');
+
+// ✅ Correct
+setName('Jane');
+```
+
+3. Arrays - WRONG Ways
+-----------------------
+```jsx
+const [items, setItems] = useState([1, 2, 3]);
+
+// ❌ NEVER mutate directly
+items.push(4);           // Mutates original
+items.pop();             // Mutates original
+items[0] = 10;          // Mutates original
+items.sort();           // Mutates original
+items.reverse();        // Mutates original
+setItems(items);        // Won't trigger re-render!
+```
+
+4. Arrays - CORRECT Ways
+------------------------
+```jsx
+const [items, setItems] = useState([1, 2, 3]);
+
+// ✅ Adding items
+setItems([...items, 4]);              // Add to end
+setItems([0, ...items]);              // Add to beginning
+setItems([...items, 4, 5, 6]);        // Add multiple
+
+// ✅ Removing items
+setItems(items.filter(item => item !== 2));  // Remove specific item
+setItems(items.slice(0, -1));         // Remove last
+setItems(items.slice(1));             // Remove first
+
+// ✅ Updating items
+setItems(items.map(item => 
+  item === 2 ? 20 : item
+));
+
+setItems(items.map((item, index) =>
+  index === 0 ? 10 : item
+));
+
+// ✅ Sorting (create new array first)
+setItems([...items].sort());
+setItems([...items].reverse());
+
+// ✅ Replacing array
+setItems([7, 8, 9]);
+```
+
+5. Objects - WRONG Ways
+-----------------------
+```jsx
+const [user, setUser] = useState({
+  name: 'John',
+  age: 30
+});
+
+// ❌ NEVER mutate directly
+user.name = 'Jane';      // Mutates original
+user.age = 31;           // Mutates original
+setUser(user);           // Won't trigger re-render!
+```
+
+6. Objects - CORRECT Ways
+-------------------------
+```jsx
+const [user, setUser] = useState({
+  name: 'John',
+  age: 30,
+  email: 'john@example.com'
+});
+
+// ✅ Update single property
+setUser({ ...user, name: 'Jane' });
+
+// ✅ Update multiple properties
+setUser({ ...user, name: 'Jane', age: 31 });
+
+// ✅ Update using functional update
+setUser(prevUser => ({
+  ...prevUser,
+  age: prevUser.age + 1
+}));
+
+// ✅ Nested objects
+const [user, setUser] = useState({
+  name: 'John',
+  address: {
+    city: 'NYC',
+    zip: '10001'
+  }
+});
+
+// Update nested property
+setUser({
+  ...user,
+  address: {
+    ...user.address,
+    city: 'Boston'
+  }
+});
+```
+
+7. Arrays of Objects
+--------------------
+```jsx
+const [users, setUsers] = useState([
+  { id: 1, name: 'John', age: 30 },
+  { id: 2, name: 'Jane', age: 25 },
+  { id: 3, name: 'Bob', age: 35 }
+]);
+
+// ✅ Add new user
+setUsers([...users, { id: 4, name: 'Alice', age: 28 }]);
+
+// ✅ Remove user
+setUsers(users.filter(user => user.id !== 2));
+
+// ✅ Update user
+setUsers(users.map(user =>
+  user.id === 1
+    ? { ...user, age: 31 }
+    : user
+));
+
+// ✅ Update specific property
+setUsers(users.map(user =>
+  user.id === 2
+    ? { ...user, name: 'Janet' }
+    : user
+));
+
+// ✅ Toggle property
+setUsers(users.map(user =>
+  user.id === 3
+    ? { ...user, active: !user.active }
+    : user
+));
+```
+
+
+State Updates with Objects and Arrays
+--------------------------------------
+
+Common Patterns:
+
+1. Todo List Example
+--------------------
+```jsx
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [inputText, setInputText] = useState('');
+  
+  // Add todo
+  const addTodo = () => {
+    if (inputText.trim()) {
+      setTodos([
+        ...todos,
+        {
+          id: Date.now(),
+          text: inputText,
+          completed: false
+        }
+      ]);
+      setInputText('');
+    }
+  };
+  
+  // Toggle todo
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id
+        ? { ...todo, completed: !todo.completed }
+        : todo
+    ));
+  };
+  
+  // Delete todo
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+  
+  // Edit todo
+  const editTodo = (id, newText) => {
+    setTodos(todos.map(todo =>
+      todo.id === id
+        ? { ...todo, text: newText }
+        : todo
+    ));
+  };
+  
+  return (
+    <div>
+      <input
+        value={inputText}
+        onChange={(e) => setInputText(e.target.value)}
+        placeholder="Add todo"
+      />
+      <button onClick={addTodo}>Add</button>
+      
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            <span style={{
+              textDecoration: todo.completed ? 'line-through' : 'none'
+            }}>
+              {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+2. Shopping Cart Example
+-------------------------
+```jsx
+function ShoppingCart() {
+  const [cart, setCart] = useState([]);
+  
+  // Add item
+  const addToCart = (product) => {
+    const existingItem = cart.find(item => item.id === product.id);
+    
+    if (existingItem) {
+      // Increase quantity
+      setCart(cart.map(item =>
+        item.id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      // Add new item
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+  };
+  
+  // Remove item
+  const removeFromCart = (id) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+  
+  // Update quantity
+  const updateQuantity = (id, quantity) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+    } else {
+      setCart(cart.map(item =>
+        item.id === id
+          ? { ...item, quantity }
+          : item
+      ));
+    }
+  };
+  
+  // Calculate total
+  const total = cart.reduce((sum, item) => 
+    sum + (item.price * item.quantity), 0
+  );
+  
+  return (
+    <div>
+      <h2>Shopping Cart</h2>
+      {cart.map(item => (
+        <div key={item.id}>
+          <span>{item.name}</span>
+          <span>${item.price}</span>
+          <input
+            type="number"
+            value={item.quantity}
+            onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+          />
+          <button onClick={() => removeFromCart(item.id)}>Remove</button>
+        </div>
+      ))}
+      <h3>Total: ${total.toFixed(2)}</h3>
+    </div>
+  );
+}
+```
+
+3. Form State Management
+-------------------------
+```jsx
+function UserForm() {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    age: '',
+    country: 'USA',
+    subscribe: false
+  });
+  
+  // Generic handler
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+  
+  // Individual handlers (alternative approach)
+  const handleFirstNameChange = (e) => {
+    setFormData({ ...formData, firstName: e.target.value });
+  };
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form data:', formData);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="firstName"
+        value={formData.firstName}
+        onChange={handleChange}
+        placeholder="First Name"
+      />
+      <input
+        name="lastName"
+        value={formData.lastName}
+        onChange={handleChange}
+        placeholder="Last Name"
+      />
+      <input
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <input
+        name="age"
+        type="number"
+        value={formData.age}
+        onChange={handleChange}
+        placeholder="Age"
+      />
+      <select
+        name="country"
+        value={formData.country}
+        onChange={handleChange}
+      >
+        <option value="USA">USA</option>
+        <option value="UK">UK</option>
+        <option value="Canada">Canada</option>
+      </select>
+      <label>
+        <input
+          name="subscribe"
+          type="checkbox"
+          checked={formData.subscribe}
+          onChange={handleChange}
+        />
+        Subscribe to newsletter
+      </label>
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+
+2.2 EVENT HANDLING
+------------------
+
+Events in React
+---------------
+React implements synthetic events - a cross-browser wrapper around native browser events.
+
+Benefits:
+- Consistent behavior across browsers
+- Better performance (event delegation)
+- Same interface as native events
+- Automatic cleanup
+
+Naming Convention:
+- camelCase: onClick, onChange, onSubmit
+- Not lowercase: onclick, onchange
+
+
+Common Event Types
+------------------
+
+1. Mouse Events
+---------------
+```jsx
+function MouseEvents() {
+  const handleClick = (e) => {
+    console.log('Clicked!', e);
+  };
+  
+  const handleDoubleClick = () => {
+    console.log('Double clicked!');
+  };
+  
+  const handleMouseEnter = () => {
+    console.log('Mouse entered');
+  };
+  
+  const handleMouseLeave = () => {
+    console.log('Mouse left');
+  };
+  
+  const handleMouseMove = (e) => {
+    console.log('Mouse position:', e.clientX, e.clientY);
+  };
+  
+  return (
+    <div>
+      <button onClick={handleClick}>Click me</button>
+      <button onDoubleClick={handleDoubleClick}>Double click</button>
+      <div
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseMove={handleMouseMove}
+        style={{ padding: '50px', border: '1px solid black' }}
+      >
+        Hover over me
+      </div>
+    </div>
+  );
+}
+```
+
+2. Keyboard Events
+------------------
+```jsx
+function KeyboardEvents() {
+  const [text, setText] = useState('');
+  
+  const handleKeyDown = (e) => {
+    console.log('Key pressed:', e.key);
+    
+    if (e.key === 'Enter') {
+      console.log('Enter pressed!');
+    }
+    
+    if (e.key === 'Escape') {
+      setText('');
+    }
+  };
+  
+  const handleKeyUp = (e) => {
+    console.log('Key released:', e.key);
+  };
+  
+  return (
+    <input
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      placeholder="Type something..."
+    />
+  );
+}
+```
+
+3. Form Events
+--------------
+```jsx
+function FormEvents() {
+  const [value, setValue] = useState('');
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();  // Prevent page reload
+    console.log('Form submitted:', value);
+  };
+  
+  const handleChange = (e) => {
+    setValue(e.target.value);
+  };
+  
+  const handleFocus = () => {
+    console.log('Input focused');
+  };
+  
+  const handleBlur = () => {
+    console.log('Input blurred');
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={value}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+      />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+4. Other Common Events
+----------------------
+```jsx
+function OtherEvents() {
+  const handleScroll = (e) => {
+    console.log('Scrolled!', e.target.scrollTop);
+  };
+  
+  const handleCopy = (e) => {
+    console.log('Content copied!');
+    // e.preventDefault(); // Prevent copying
+  };
+  
+  const handlePaste = (e) => {
+    console.log('Content pasted!');
+  };
+  
+  return (
+    <div
+      onScroll={handleScroll}
+      onCopy={handleCopy}
+      onPaste={handlePaste}
+      style={{ height: '200px', overflow: 'auto' }}
+    >
+      {/* Content */}
+    </div>
+  );
+}
+```
+
+
+Event Object
+------------
+
+The synthetic event object provides useful information:
+
+```jsx
+function EventObject() {
+  const handleClick = (e) => {
+    // Event properties
+    console.log('Type:', e.type);                    // 'click'
+    console.log('Target:', e.target);                // Element that triggered
+    console.log('Current target:', e.currentTarget); // Element handler attached to
+    console.log('Timestamp:', e.timeStamp);
+    
+    // Mouse position
+    console.log('Client X/Y:', e.clientX, e.clientY);
+    console.log('Page X/Y:', e.pageX, e.pageY);
+    console.log('Screen X/Y:', e.screenX, e.screenY);
+    
+    // Keyboard modifiers
+    console.log('Ctrl key:', e.ctrlKey);
+    console.log('Shift key:', e.shiftKey);
+    console.log('Alt key:', e.altKey);
+    console.log('Meta key:', e.metaKey);
+    
+    // Prevent default behavior
+    e.preventDefault();
+    
+    // Stop propagation
+    e.stopPropagation();
+  };
+  
+  const handleKeyPress = (e) => {
+    console.log('Key:', e.key);          // 'a', 'Enter', 'Escape', etc.
+    console.log('Key code:', e.keyCode); // Deprecated
+    console.log('Code:', e.code);        // 'KeyA', 'Enter', etc.
+  };
+  
+  const handleChange = (e) => {
+    console.log('Value:', e.target.value);
+    console.log('Name:', e.target.name);
+    console.log('Checked:', e.target.checked); // For checkboxes
+  };
+  
+  return (
+    <div>
+      <button onClick={handleClick}>Click me</button>
+      <input onKeyDown={handleKeyPress} />
+      <input onChange={handleChange} />
+    </div>
+  );
+}
+```
+
+
+Passing Arguments to Event Handlers
+------------------------------------
+
+1. Arrow Function in JSX
+-------------------------
+```jsx
+function ItemList() {
+  const items = ['Apple', 'Banana', 'Orange'];
+  
+  const handleDelete = (item) => {
+    console.log('Deleting:', item);
+  };
+  
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item}>
+          {item}
+          {/* ✅ Arrow function */}
+          <button onClick={() => handleDelete(item)}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+2. Using bind()
+---------------
+```jsx
+function ItemList() {
+  const items = ['Apple', 'Banana', 'Orange'];
+  
+  const handleDelete = (item, e) => {
+    console.log('Deleting:', item);
+    console.log('Event:', e);
+  };
+  
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item}>
+          {item}
+          {/* ✅ Using bind */}
+          <button onClick={handleDelete.bind(null, item)}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+3. Wrapper Function
+-------------------
+```jsx
+function ItemList() {
+  const items = ['Apple', 'Banana', 'Orange'];
+  
+  const handleDelete = (item) => {
+    console.log('Deleting:', item);
+  };
+  
+  const createDeleteHandler = (item) => {
+    return (e) => {
+      handleDelete(item);
+    };
+  };
+  
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item}>
+          {item}
+          <button onClick={createDeleteHandler(item)}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+4. Data Attributes
+------------------
+```jsx
+function ItemList() {
+  const items = [
+    { id: 1, name: 'Apple' },
+    { id: 2, name: 'Banana' },
+    { id: 3, name: 'Orange' }
+  ];
+  
+  const handleDelete = (e) => {
+    const id = e.target.dataset.id;
+    console.log('Deleting ID:', id);
+  };
+  
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>
+          {item.name}
+          <button data-id={item.id} onClick={handleDelete}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+
+Form Handling and Controlled Components
+----------------------------------------
+
+1. Controlled Components
+------------------------
+Components where React controls the form data through state.
+
+```jsx
+function ControlledInput() {
+  const [value, setValue] = useState('');
+  
+  return (
+    <div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
+      <p>You typed: {value}</p>
+    </div>
+  );
+}
+```
+
+2. Multiple Inputs
+------------------
+```jsx
+function MultipleInputs() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+  
+  return (
+    <form>
+      <input
+        name="username"
+        value={formData.username}
+        onChange={handleChange}
+        placeholder="Username"
+      />
+      <input
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <input
+        name="password"
+        type="password"
+        value={formData.password}
+        onChange={handleChange}
+        placeholder="Password"
+      />
+    </form>
+  );
+}
+```
+
+3. Textarea
+-----------
+```jsx
+function TextareaExample() {
+  const [text, setText] = useState('');
+  
+  return (
+    <textarea
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      rows={5}
+      cols={50}
+    />
+  );
+}
+```
+
+4. Select Dropdown
+------------------
+```jsx
+function SelectExample() {
+  const [country, setCountry] = useState('USA');
+  
+  return (
+    <select
+      value={country}
+      onChange={(e) => setCountry(e.target.value)}
+    >
+      <option value="USA">United States</option>
+      <option value="UK">United Kingdom</option>
+      <option value="Canada">Canada</option>
+      <option value="Australia">Australia</option>
+    </select>
+  );
+}
+```
+
+5. Checkbox
+-----------
+```jsx
+function CheckboxExample() {
+  const [isChecked, setIsChecked] = useState(false);
+  
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={isChecked}
+        onChange={(e) => setIsChecked(e.target.checked)}
+      />
+      Accept terms and conditions
+    </label>
+  );
+}
+```
+
+6. Radio Buttons
+----------------
+```jsx
+function RadioExample() {
+  const [selected, setSelected] = useState('option1');
+  
+  return (
+    <div>
+      <label>
+        <input
+          type="radio"
+          value="option1"
+          checked={selected === 'option1'}
+          onChange={(e) => setSelected(e.target.value)}
+        />
+        Option 1
+      </label>
+      <label>
+        <input
+          type="radio"
+          value="option2"
+          checked={selected === 'option2'}
+          onChange={(e) => setSelected(e.target.value)}
+        />
+        Option 2
+      </label>
+      <label>
+        <input
+          type="radio"
+          value="option3"
+          checked={selected === 'option3'}
+          onChange={(e) => setSelected(e.target.value)}
+        />
+        Option 3
+      </label>
+    </div>
+  );
+}
+```
+
+7. Complete Form Example
+-------------------------
+```jsx
+function RegistrationForm() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    country: 'USA',
+    agreeToTerms: false,
+    gender: ''
+  });
+  
+  const [errors, setErrors] = useState({});
+  
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+  
+  const validate = () => {
+    const newErrors = {};
+    
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
+    }
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!formData.agreeToTerms) {
+      newErrors.agreeToTerms = 'You must agree to terms';
+    }
+    
+    return newErrors;
+  };
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const validationErrors = validate();
+    
+    if (Object.keys(validationErrors).length === 0) {
+      console.log('Form submitted:', formData);
+      // Submit to server
+    } else {
+      setErrors(validationErrors);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="Username"
+        />
+        {errors.username && <span>{errors.username}</span>}
+      </div>
+      
+      <div>
+        <input
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Email"
+        />
+        {errors.email && <span>{errors.email}</span>}
+      </div>
+      
+      <div>
+        <input
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Password"
+        />
+        {errors.password && <span>{errors.password}</span>}
+      </div>
+      
+      <div>
+        <input
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Confirm Password"
+        />
+        {errors.confirmPassword && <span>{errors.confirmPassword}</span>}
+      </div>
+      
+      <div>
+        <select
+          name="country"
+          value={formData.country}
+          onChange={handleChange}
+        >
+          <option value="USA">USA</option>
+          <option value="UK">UK</option>
+          <option value="Canada">Canada</option>
+        </select>
+      </div>
+      
+      <div>
+        <label>
+          <input
+            name="agreeToTerms"
+            type="checkbox"
+            checked={formData.agreeToTerms}
+            onChange={handleChange}
+          />
+          I agree to terms and conditions
+        </label>
+        {errors.agreeToTerms && <span>{errors.agreeToTerms}</span>}
+      </div>
+      
+      <button type="submit">Register</button>
+    </form>
+  );
+}
+```
+
+
+2.3 LIFTING STATE UP
+---------------------
+
+When multiple components need to share state, lift it up to their closest common ancestor.
+
+The Problem
+-----------
+Two sibling components need to share data:
+
+```jsx
+// ❌ Problem: Can't share state between siblings
+function ComponentA() {
+  const [data, setData] = useState('');
+  // ComponentB can't access this data
+}
+
+function ComponentB() {
+  // Needs the data from ComponentA
+}
+```
+
+The Solution
+------------
+Lift state to parent component:
+
+```jsx
+// ✅ Solution: Lift state to parent
+function Parent() {
+  const [data, setData] = useState('');
+  
+  return (
+    <div>
+      <ComponentA data={data} setData={setData} />
+      <ComponentB data={data} />
+    </div>
+  );
+}
+
+function ComponentA({ data, setData }) {
+  return (
+    <input
+      value={data}
+      onChange={(e) => setData(e.target.value)}
+    />
+  );
+}
+
+function ComponentB({ data }) {
+  return <p>Data: {data}</p>;
+}
+```
+
+
+Example 1: Temperature Calculator
+----------------------------------
+```jsx
+function TemperatureCalculator() {
+  const [temperature, setTemperature] = useState('');
+  
+  return (
+    <div>
+      <h2>Temperature Converter</h2>
+      <TemperatureInput
+        scale="c"
+        temperature={temperature}
+        onTemperatureChange={setTemperature}
+      />
+      <TemperatureInput
+        scale="f"
+        temperature={temperature}
+        onTemperatureChange={setTemperature}
+      />
+      <BoilingVerdict celsius={parseFloat(temperature)} />
+    </div>
+  );
+}
+
+function TemperatureInput({ scale, temperature, onTemperatureChange }) {
+  const scaleName = scale === 'c' ? 'Celsius' : 'Fahrenheit';
+  
+  const handleChange = (e) => {
+    onTemperatureChange(e.target.value);
+  };
+  
+  return (
+    <fieldset>
+      <legend>Enter temperature in {scaleName}:</legend>
+      <input value={temperature} onChange={handleChange} />
+    </fieldset>
+  );
+}
+
+function BoilingVerdict({ celsius }) {
+  if (isNaN(celsius)) {
+    return null;
+  }
+  
+  if (celsius >= 100) {
+    return <p>The water would boil.</p>;
+  }
+  return <p>The water would not boil.</p>;
+}
+```
+
+
+Example 2: Filter and List
+---------------------------
+```jsx
+function App() {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const users = [
+    { id: 1, name: 'John Doe' },
+    { id: 2, name: 'Jane Smith' },
+    { id: 3, name: 'Bob Johnson' }
+  ];
+  
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  return (
+    <div>
+      <SearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
+      <UserList users={filteredUsers} />
+    </div>
+  );
+}
+
+function SearchBar({ searchTerm, onSearchChange }) {
+  return (
+    <input
+      type="text"
+      placeholder="Search users..."
+      value={searchTerm}
+      onChange={(e) => onSearchChange(e.target.value)}
+    />
+  );
+}
+
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+
+Parent-Child Communication
+--------------------------
+
+1. Parent to Child (Props)
+---------------------------
+```jsx
+function Parent() {
+  const [message, setMessage] = useState('Hello from parent');
+  
+  return <Child message={message} />;
+}
+
+function Child({ message }) {
+  return <p>{message}</p>;
+}
+```
+
+2. Child to Parent (Callback Props)
+------------------------------------
+```jsx
+function Parent() {
+  const [message, setMessage] = useState('');
+  
+  const handleMessage = (msg) => {
+    setMessage(msg);
+  };
+  
+  return (
+    <div>
+      <Child onSendMessage={handleMessage} />
+      <p>Message from child: {message}</p>
+    </div>
+  );
+}
+
+function Child({ onSendMessage }) {
+  const sendMessage = () => {
+    onSendMessage('Hello from child!');
+  };
+  
+  return <button onClick={sendMessage}>Send Message</button>;
+}
+```
+
+
+Inverse Data Flow
+-----------------
+
+Child components calling parent functions to update parent state.
+
+Example: Todo App
+-----------------
+```jsx
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  
+  const addTodo = (text) => {
+    setTodos([...todos, {
+      id: Date.now(),
+      text,
+      completed: false
+    }]);
+  };
+  
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id
+        ? { ...todo, completed: !todo.completed }
+        : todo
+    ));
+  };
+  
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+  
+  return (
+    <div>
+      <TodoInput onAdd={addTodo} />
+      <TodoList
+        todos={todos}
+        onToggle={toggleTodo}
+        onDelete={deleteTodo}
+      />
+    </div>
+  );
+}
+
+function TodoInput({ onAdd }) {
+  const [text, setText] = useState('');
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (text.trim()) {
+      onAdd(text);
+      setText('');
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Add todo"
+      />
+      <button type="submit">Add</button>
+    </form>
+  );
+}
+
+function TodoList({ todos, onToggle, onDelete }) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <TodoItem
+          key={todo.id}
+          todo={todo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+        />
+      ))}
+    </ul>
+  );
+}
+
+function TodoItem({ todo, onToggle, onDelete }) {
+  return (
+    <li>
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={() => onToggle(todo.id)}
+      />
+      <span style={{
+        textDecoration: todo.completed ? 'line-through' : 'none'
+      }}>
+        {todo.text}
+      </span>
+      <button onClick={() => onDelete(todo.id)}>Delete</button>
+    </li>
+  );
+}
+```
+
+
+PRACTICE EXERCISES
+------------------
+
+Exercise 1: Counter with History
+--------------------------------
+Create a counter that:
+- Increments/decrements
+- Shows history of all values
+- Can reset to any previous value
+
+Exercise 2: Multi-Step Form
+---------------------------
+Build a form with:
+- Multiple steps (personal info, address, preferences)
+- Next/Previous buttons
+- Progress indicator
+- Form validation
+- Summary page
+
+Exercise 3: Shopping Cart
+-------------------------
+Create a shopping cart with:
+- Add/remove items
+- Update quantities
+- Calculate total with tax
+- Apply discount codes
+- Clear cart functionality
+
+Exercise 4: Filterable Product List
+-----------------------------------
+Build a product catalog with:
+- Search by name
+- Filter by category
+- Filter by price range
+- Sort by price/name
+- Reset filters
+
+Exercise 5: Interactive Dashboard
+---------------------------------
+Create a dashboard with:
+- Multiple widgets sharing state
+- Add/remove widgets
+- Widget configuration
+- Save/load layout
+
+
+COMMON MISTAKES & TIPS
+-----------------------
+
+Common Mistakes:
+1. Mutating state directly
+2. Not using functional updates for dependent state
+3. Forgetting preventDefault() on forms
+4. Creating new functions in render (performance)
+5. Not lifting state up when needed
+6. Over-lifting state (lifting too high)
+7. Forgetting event.target properties (value, checked, name)
+
+Tips:
+1. Always treat state as immutable
+2. Use functional updates when new state depends on old
+3. Lift state only as high as needed
+4. Use generic handlers with name attribute
+5. Validate forms before submission
+6. Keep components focused and single-purpose
+7. Use controlled components for forms
+8. Consider using form libraries for complex forms
+
+
+NEXT STEPS
+----------
+
+You've completed Module 2! You should now understand:
+✓ Managing state with useState
+✓ State immutability and updating objects/arrays
+✓ Handling events in React
+✓ Working with forms and controlled components
+✓ Lifting state up for shared data
+✓ Parent-child communication patterns
+
+Next up: Module 3 - Component Lifecycle and Effects
+Learn how to perform side effects, work with component lifecycle, and use additional hooks.

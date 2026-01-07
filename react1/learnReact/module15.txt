@@ -1,0 +1,179 @@
+MODULE 15: BEST PRACTICES & CAPSTONE
+====================================
+
+15.1 PROJECT STRUCTURE
+----------------------
+- Feature-first structure: `features/todos`, `features/auth`, `features/profile` with components, hooks, types, tests.
+- Shared layers: `components/` (primitives), `lib/` (utils), `styles/` (tokens), `hooks/` (generic hooks), `context/`.
+- Keep tests and stories colocated with code.
+
+Example Layout
+--------------
+```
+src/
+  app/
+  components/
+  features/
+    auth/
+      LoginForm.tsx
+      auth.api.ts
+      auth.types.ts
+      auth.test.tsx
+    todos/
+      TodoList.tsx
+      TodoItem.tsx
+      todo.api.ts
+      todo.types.ts
+  hooks/
+  context/
+  styles/
+  lib/
+```
+
+
+15.2 CODE QUALITY GUIDELINES
+----------------------------
+- Prefer small, focused components; extract when props grow complex.
+- Keep render functions pure; avoid side effects in render.
+- Prefer composition over props explosion; use children/render props when flexible.
+- Document component contracts (prop types/TS interfaces, JSDoc where helpful).
+
+Linting/Formatting
+------------------
+- Use ESLint with React/JSX rules, hooks rules, accessibility plugin.
+- Prettier for consistent formatting; align lint + format in CI.
+
+
+15.3 STATE MANAGEMENT CHOICES
+-----------------------------
+- Local UI state: `useState`/`useReducer` close to usage.
+- Server state: React Query (cache, revalidation, mutations).
+- Global state: Context for low-frequency, small data; Redux Toolkit/Zustand for larger/global logic.
+- Normalize data when shared; avoid duplicating server state locally.
+
+
+15.4 DATA FETCHING PATTERNS
+---------------------------
+- Cache server data; set `staleTime` and retries intentionally.
+- Handle loading/error/empty states explicitly.
+- Cancel stale requests (AbortController) and debounce input-driven fetches.
+- Use optimistic updates for snappy UX when appropriate.
+
+
+15.5 STYLING & DESIGN SYSTEM
+----------------------------
+- Establish tokens (color, spacing, radii, shadows, typography) as CSS variables.
+- Choose one primary styling approach per project (CSS Modules, CSS-in-JS, Tailwind); avoid mixing without reason.
+- Provide accessible focus states; maintain contrast (WCAG AA).
+- Support theming (light/dark) via CSS variables where needed.
+
+
+15.6 PERFORMANCE PRACTICES
+--------------------------
+- Profile before optimizing; measure render counts and bundle size.
+- Memoize expensive computations and stable callbacks when child memoization matters.
+- Virtualize large lists; code-split heavy routes/components.
+- Use transitions/deferred values for expensive derived UI.
+- Lazy-load non-critical assets; optimize images (WebP/AVIF, lazy, srcset).
+
+
+15.7 ACCESSIBILITY BASICS
+-------------------------
+- Use semantic HTML; map UI to proper roles automatically.
+- Ensure keyboard access: focusable controls, logical tab order, focus outlines.
+- Provide `aria-*` where needed (aria-label, aria-expanded, aria-live for toasts).
+- Manage focus on dialogs/menus; return focus on close.
+- Respect `prefers-reduced-motion`.
+
+
+15.8 SECURITY & PRIVACY
+-----------------------
+- Never expose secrets in client bundles; use server-side envs.
+- Validate and sanitize all user input server-side.
+- Prefer httpOnly cookies for auth tokens; avoid storing sensitive tokens in localStorage.
+- Use HTTPS and security headers (CSP, HSTS, X-Content-Type-Options).
+- Avoid leaking PII in logs/analytics.
+
+
+15.9 TESTING STRATEGY
+---------------------
+- Unit: pure functions/hooks; Component/Integration: RTL with user flows; E2E: Cypress/Playwright.
+- Mock network with MSW; avoid brittle implementation assertions.
+- Add smoke tests for critical flows (auth, checkout, CRUD) in CI.
+
+
+15.10 OBSERVABILITY & QUALITY
+-----------------------------
+- Error monitoring (Sentry/LogRocket), performance/RUM, Core Web Vitals tracking.
+- Logging for API failures and key user events (respect privacy).
+- Feature flags for safe rollouts; toggles for experiments.
+
+
+15.11 CI/CD CHECKS
+------------------
+- Lint, test, type-check, build in CI; block merges on failure.
+- Preview deployments for every PR; run Lighthouse/axe where feasible.
+- Keep lockfile committed; use deterministic builds.
+
+
+15.12 DOCUMENTATION & DX
+------------------------
+- Maintain README with setup, scripts, env vars, architecture notes.
+- ADRs (Architecture Decision Records) for significant choices.
+- Storybook (or similar) for UI components; document props and accessibility notes.
+
+
+15.13 TEAM PRACTICES
+--------------------
+- Code reviews focused on correctness, accessibility, performance, security.
+- Pair/mob on complex changes; share knowledge via docs and patterns.
+- Keep PRs small and scoped; ensure tests included.
+
+
+15.14 CAPSTONE PROJECT IDEAS
+----------------------------
+1) **Full-Stack Dashboard**
+   - Auth, role-based access; data fetching with React Query; charts (lazy-loaded); light/dark theme; responsive layout.
+2) **E-Commerce Lite**
+   - Product catalog with search/filter (debounce), cart state, checkout flow; SPA routing with protected routes; optimistic cart updates.
+3) **Real-Time Collab Notes**
+   - WebSocket/RTC updates; presence indicators; conflict handling; offline-friendly with local cache sync.
+4) **Component Library Slice**
+   - Buttons, Inputs, Modals, Toasts, Tabs with accessibility; theming tokens; Storybook docs; tests with RTL.
+5) **Analytics Explorer**
+   - Large dataset with virtualization, column sorting, and facet filters; server pagination; export; performance profiling.
+
+
+15.15 DELIVERY CHECKLIST (GO-LIVE)
+----------------------------------
+- [ ] Env vars set and validated; no secrets in client.
+- [ ] Lint/test/type-check/build passing in CI.
+- [ ] Performance budgets met (LCP/CLS/INP, bundle size).
+- [ ] Accessibility smoke checked (axe/Lighthouse, keyboard nav, focus traps).
+- [ ] Monitoring and logging configured; alerts in place.
+- [ ] Caching/headers/compression configured; SPA rewrites set.
+- [ ] Rollback plan ready; previous build artifacts kept.
+
+
+15.16 COMMON PITFALLS & TIPS
+----------------------------
+Common Pitfalls
+- Mixing multiple styling systems without need, leading to inconsistency.
+- Overusing global state; not separating server vs client state.
+- Skipping accessibility checks until late.
+- Shipping without monitoring or rollback.
+
+Tips
+- Start with clear state boundaries and data-fetching strategy.
+- Default to semantic HTML and accessible patterns; add tests for critical flows.
+- Keep performance visible (analyzers, Profiler, RUM dashboards).
+- Invest in reusable primitives and tokens early.
+
+
+NEXT STEPS
+----------
+You finished Module 15! You can now:
+✓ Structure projects for scale
+✓ Apply quality, accessibility, performance, and security best practices
+✓ Plan CI/CD, observability, and documentation
+✓ Tackle capstone projects that integrate the full stack of skills

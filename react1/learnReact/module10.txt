@@ -1,0 +1,597 @@
+MODULE 10: TESTING REACT APPLICATIONS
+=====================================
+
+10.1 TESTING FOUNDATIONS
+------------------------
+
+Goals of Testing
+----------------
+- Prevent regressions and codify expected behavior.
+- Enable safe refactoring.
+- Provide fast feedback for developers.
+
+Testing Pyramid for Frontend
+----------------------------
+- Unit tests: small, fast, isolated (e.g., pure functions, hooks).
+- Integration/component tests: components with hooks, context, routing.
+- End-to-end (E2E): user flows in browser (covered later; note Cypress/Playwright).
+
+Key Libraries
+-------------
+- Jest (test runner, assertions, mocking, watch mode).
+- React Testing Library (RTL) for DOM-centric tests, testing behavior over implementation.
+- jest-dom for extended matchers (toBeInTheDocument, toHaveTextContent, etc.).
+
+Setup (Vite + React)
+---------------------
+Install:
+```bash
+npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom @testing-library/user-event
+```
+Configure `vitest` in `vite.config.js`:
+```js
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setupTests.js'
+  }
+});
+```
+Create setup file:
+```js
+// src/test/setupTests.js
+import '@testing-library/jest-dom';
+```
+Run tests:
+```bash
+npm test
+# or
+npx vitest run
+npx vitest watch
+```
+
+
+10.2 WRITING YOUR FIRST TESTS
+-----------------------------
+
+Simple Component Test
+---------------------
+```jsx
+// src/components/Greeting.jsx
+export function Greeting({ name }) {
+  return <h1>Hello, {name || 'friend'}!</h1>;
+}
+```
+```jsx
+// src/components/__tests__/Greeting.test.jsx
+import { render, screen } from '@testing-library/react';
+import { Greeting } from '../Greeting';
+
+test('renders greeting with provided name', () => {
+  render(<Greeting name="Ada" />);
+  expect(screen.getByText(/hello, ada/i)).toBeInTheDocument();
+});
+
+test('falls back to friend', () => {
+  render(<Greeting />);
+  expect(screen.getByText(/hello, friend/i)).toBeInTheDocument();
+});
+```
+
+Using user-event
+----------------
+```jsx
+// src/components/Counter.jsx
+import { useState } from 'react';
+export function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(c => c + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+```jsx
+// src/components/__tests__/Counter.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Counter } from '../Counter';
+
+test('increments count', async () => {
+  const user = userEvent.setup();
+  render(<Counter />);
+  await user.click(screen.getByRole('button', { name: /increment/i }));
+  expect(screen.getByText(/count: 1/i)).toBeInTheDocument();
+});
+```
+
+
+10.3 QUERYING THE DOM (RTL)
+---------------------------
+
+Preferred Queries (in order)
+----------------------------
+1. `getByRole` with accessible name (most robust).
+2. `getByLabelText` for form controls.
+3. `getByPlaceholderText`, `getByText`, `getByDisplayValue`.
+4. `getByTestId` as last resort.
+
+Examples
+--------
+```jsx
+screen.getByRole('button', { name: /submit/i });
+screen.getByLabelText(/email/i);
+screen.getByPlaceholderText(/search/i);
+screen.getByText(/welcome/i);
+screen.getByTestId('modal');
+```
+
+Asynchronous Queries
+--------------------
+- `findBy*` returns a promise (waits for appearance).
+- `queryBy*` for elements that may be absent.
+
+```jsx
+const alert = await screen.findByRole('alert');
+expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
+```
+
+
+10.4 MOCKING DATA FETCHING
+--------------------------
+
+Using MSW (Mock Service Worker)
+-------------------------------
+```bash
+npm install -D msw
+```
+Setup handler:
+```js
+// src/test/server.js
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
+
+export const server = setupServer(
+  http.get('/api/user', () => HttpResponse.json({ name: 'Ada' })),
+  http.post('/api/login', async ({ request }) => {
+    const body = await request.json();
+    if (body.password === 'secret') {
+      return HttpResponse.json({ token: 'abc' });
+    }
+    return HttpResponse.json({ message: 'Invalid' }, { status: 401 });
+  })
+);
+```
+Wire server in setup:
+```js
+// src/test/setupTests.js
+import '@testing-library/jest-dom';
+import { server } from './server';
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+Component using fetch:
+```jsx
+// src/components/Profile.jsx
+import { useEffect, useState } from 'react';
+export function Profile() {
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    fetch('/api/user')
+      .then(r => {
+        if (!r.ok) throw new Error('failed');
+        return r.json();
+      })
+      .then(setUser)
+      .catch(() => setError('Could not load'));
+  }, []);
+  if (error) return <div role="alert">{error}</div>;
+  if (!user) return <div>Loading...</div>;
+  return <p>Welcome, {user.name}</p>;
+}
+```
+Test with MSW:
+```jsx
+// src/components/__tests__/Profile.test.jsx
+import { render, screen } from '@testing-library/react';
+import { Profile } from '../Profile';
+import { server } from '../../test/server';
+import { http, HttpResponse } from 'msw';
+
+test('shows user from API', async () => {
+  render(<Profile />);
+  expect(await screen.findByText(/welcome, ada/i)).toBeInTheDocument();
+});
+
+test('handles error', async () => {
+  server.use(http.get('/api/user', () => HttpResponse.text('oops', { status: 500 })));
+  render(<Profile />);
+  expect(await screen.findByRole('alert')).toHaveTextContent(/could not load/i);
+});
+```
+
+
+10.5 TESTING FORMS AND VALIDATION
+---------------------------------
+
+Form Component
+--------------
+```jsx
+// src/components/LoginForm.jsx
+import { useState } from 'react';
+
+export function LoginForm({ onLogin }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Email and password required');
+      return;
+    }
+    setError(null);
+    await onLogin({ email, password });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Email
+        <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label>
+        Password
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </label>
+      {error && <div role="alert">{error}</div>}
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+Test:
+```jsx
+// src/components/__tests__/LoginForm.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { LoginForm } from '../LoginForm';
+
+test('requires email and password', async () => {
+  const user = userEvent.setup();
+  render(<LoginForm onLogin={vi.fn()} />);
+  await user.click(screen.getByRole('button', { name: /login/i }));
+  expect(screen.getByRole('alert')).toHaveTextContent(/required/i);
+});
+
+test('submits values', async () => {
+  const user = userEvent.setup();
+  const onLogin = vi.fn();
+  render(<LoginForm onLogin={onLogin} />);
+  await user.type(screen.getByLabelText(/email/i), 'ada@example.com');
+  await user.type(screen.getByLabelText(/password/i), 'secret');
+  await user.click(screen.getByRole('button', { name: /login/i }));
+  expect(onLogin).toHaveBeenCalledWith({ email: 'ada@example.com', password: 'secret' });
+});
+```
+
+
+10.6 TESTING HOOKS
+------------------
+
+Using RTL renderHook (from @testing-library/react)
+--------------------------------------------------
+```jsx
+import { renderHook, act } from '@testing-library/react';
+import { useCounter } from '../useCounter';
+
+test('increments', () => {
+  const { result } = renderHook(() => useCounter());
+  act(() => result.current.increment());
+  expect(result.current.count).toBe(1);
+});
+```
+
+Example Hook
+------------
+```jsx
+// src/hooks/useCounter.js
+import { useState } from 'react';
+export function useCounter(initial = 0) {
+  const [count, setCount] = useState(initial);
+  return {
+    count,
+    increment: () => setCount(c => c + 1),
+    decrement: () => setCount(c => c - 1),
+    reset: () => setCount(initial)
+  };
+}
+```
+
+Testing async hook
+------------------
+```jsx
+import { renderHook, waitFor } from '@testing-library/react';
+import { useUser } from '../useUser';
+
+test('loads user', async () => {
+  const { result } = renderHook(() => useUser());
+  await waitFor(() => expect(result.current.isLoading).toBe(false));
+  expect(result.current.user.name).toBe('Ada');
+});
+```
+
+
+10.7 TESTING CONTEXT AND PROVIDERS
+----------------------------------
+
+Auth Context Example
+--------------------
+```jsx
+// src/context/AuthContext.jsx
+import { createContext, useContext, useState } from 'react';
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const login = (name) => setUser({ name });
+  const logout = () => setUser(null);
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+```
+Component consuming:
+```jsx
+// src/components/NavBar.jsx
+import { useAuth } from '../context/AuthContext';
+export function NavBar() {
+  const { user, login, logout } = useAuth();
+  return (
+    <div>
+      {user ? (
+        <>
+          <span>Hi {user.name}</span>
+          <button onClick={logout}>Logout</button>
+        </>
+      ) : (
+        <button onClick={() => login('Ada')}>Login</button>
+      )}
+    </div>
+  );
+}
+```
+Test with provider wrapper:
+```jsx
+// src/components/__tests__/NavBar.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { NavBar } from '../NavBar';
+import { AuthProvider } from '../../context/AuthContext';
+
+test('toggles login state', async () => {
+  const user = userEvent.setup();
+  render(
+    <AuthProvider>
+      <NavBar />
+    </AuthProvider>
+  );
+  await user.click(screen.getByRole('button', { name: /login/i }));
+  expect(screen.getByText(/hi ada/i)).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /logout/i }));
+  expect(screen.queryByText(/hi ada/i)).not.toBeInTheDocument();
+});
+```
+
+
+10.8 TESTING ROUTING
+--------------------
+
+Using MemoryRouter
+------------------
+```jsx
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Routes, Route, Link } from 'react-router-dom';
+
+function Home() { return <h1>Home</h1>; }
+function About() { return <h1>About</h1>; }
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+    </Routes>
+  );
+}
+
+test('navigates to about', async () => {
+  render(
+    <MemoryRouter initialEntries={['/about']}>
+      <AppRoutes />
+    </MemoryRouter>
+  );
+  expect(screen.getByText(/about/i)).toBeInTheDocument();
+});
+```
+
+Testing Links
+-------------
+```jsx
+function Nav() {
+  return (
+    <nav>
+      <Link to="/">Home</Link>
+      <Link to="/about">About</Link>
+    </nav>
+  );
+}
+
+test('renders nav links', () => {
+  render(
+    <MemoryRouter>
+      <Nav />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole('link', { name: /home/i })).toHaveAttribute('href', '/');
+});
+```
+
+
+10.9 SNAPSHOT TESTING (USE SPARINGLY)
+-------------------------------------
+
+- Use for small, stable UI fragments; avoid large components.
+- Prefer semantic assertions over snapshots.
+
+```jsx
+import { render } from '@testing-library/react';
+import { Greeting } from '../Greeting';
+
+test('matches snapshot', () => {
+  const { asFragment } = render(<Greeting name="Ada" />);
+  expect(asFragment()).toMatchSnapshot();
+});
+```
+
+
+10.10 PERFORMANCE & TIMERS
+--------------------------
+
+Fake Timers
+-----------
+```jsx
+import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
+import { Toast } from '../Toast';
+
+test('hides after timeout', () => {
+  vi.useFakeTimers();
+  render(<Toast message="Saved" duration={2000} />);
+  vi.advanceTimersByTime(2000);
+  expect(screen.queryByText(/saved/i)).not.toBeInTheDocument();
+  vi.useRealTimers();
+});
+```
+
+
+10.11 CODE COVERAGE
+-------------------
+
+Run coverage:
+```bash
+npx vitest run --coverage
+```
+- Aim for meaningful coverage; don’t chase 100% blindly.
+- Investigate uncovered branches for important paths.
+
+
+10.12 TESTING STRATEGY & BEST PRACTICES
+---------------------------------------
+
+Principles
+----------
+- Test behavior, not implementation details.
+- Prefer user-facing queries (`getByRole`) over test IDs.
+- Keep tests deterministic; avoid real network calls (use MSW).
+- One assertion cluster per scenario; keep tests readable.
+- Arrange-Act-Assert structure.
+
+File Organization
+-----------------
+- Colocate tests with components: `Component.jsx` + `Component.test.jsx`.
+- Common test utils in `src/test/`.
+
+Common Utilities
+----------------
+```jsx
+// src/test/renderWithProviders.js
+import { render } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../context/AuthContext';
+
+export function renderWithProviders(ui, { route = '/', queryClient } = {}) {
+  const qc = queryClient || new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  window.history.pushState({}, 'Test page', route);
+  return render(
+    <QueryClientProvider client={qc}>
+      <BrowserRouter>
+        <AuthProvider>{ui}</AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
+```
+
+
+10.13 PRACTICE EXERCISES
+------------------------
+
+1) Data Fetching Component
+- Component fetches data on mount; show loading/error/success.
+- Test success and failure paths using MSW.
+
+2) Form Submission
+- Form validates required fields; calls submit callback.
+- Test validation error and successful submit values.
+
+3) Auth Flow
+- Context provider with login/logout; navbar reflects state.
+- Test login toggles, logout clears user.
+
+4) Router Navigation
+- App with Home/About/Protected; protected route requires auth.
+- Test redirect to login when unauthenticated.
+
+5) Hook Testing
+- Custom hook `useDebounce` that delays value; test with fake timers.
+
+
+10.14 COMMON MISTAKES & TIPS
+----------------------------
+
+Common Mistakes
+- Testing implementation details (state setters, internal props).
+- Using `getByTestId` everywhere instead of semantic queries.
+- Not cleaning up mocks/handlers between tests.
+- Ignoring accessibility roles/names leading to brittle queries.
+- Overusing snapshots; snapshotting entire pages.
+
+Tips
+- Prefer `screen` for queries to reduce variable passing.
+- Use `findBy` for async appearance; `queryBy` for absence.
+- Keep tests fast; mock network and timers.
+- Make tests resilient to UI tweaks by asserting intent (text/roles).
+- Document custom test utilities.
+
+
+NEXT STEPS
+----------
+You finished Module 10! You can now:
+✓ Configure Vitest + RTL + jest-dom
+✓ Write component, hook, context, and routing tests
+✓ Mock network with MSW and handle async flows
+✓ Test forms, timers, and coverage sensibly
+✓ Apply testing best practices and file organization
+
+Next up: Module 11 – Performance Optimization in React.

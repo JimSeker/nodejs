@@ -1,0 +1,1255 @@
+MODULE 4: ADVANCED PATTERNS
+===========================
+
+4.1 CONTEXT API
+---------------
+
+What is Context API?
+--------------------
+Context API is React's built-in solution for managing global state and avoiding prop drilling.
+
+Key benefits:
+- Eliminate prop drilling (passing props through many levels)
+- Manage global state without external libraries
+- Simple and lightweight
+- Built into React
+
+When to use Context:
+- Theme (light/dark mode)
+- Language/localization
+- Authentication state
+- User preferences
+- Application settings
+- Modal/notification state
+
+
+Creating and Using Context
+---------------------------
+
+1. Creating a Context
+---------------------
+```jsx
+import { createContext } from 'react';
+
+// Create a context with default value
+const ThemeContext = createContext('light');
+
+// Or without default value
+const UserContext = createContext(null);
+```
+
+2. Context Provider
+-------------------
+```jsx
+import { createContext, useState } from 'react';
+
+const ThemeContext = createContext();
+
+// Provider component
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+  
+  const value = {
+    theme,
+    toggleTheme
+  };
+  
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export default ThemeContext;
+```
+
+3. Using Context in Components
+-------------------------------
+```jsx
+import { useContext } from 'react';
+import ThemeContext from './ThemeContext';
+
+function Button() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
+  
+  return (
+    <button
+      onClick={toggleTheme}
+      style={{
+        backgroundColor: theme === 'light' ? '#fff' : '#333',
+        color: theme === 'light' ? '#333' : '#fff'
+      }}
+    >
+      Current theme: {theme}
+    </button>
+  );
+}
+
+export default Button;
+```
+
+4. Setting Up the App
+---------------------
+```jsx
+import { ThemeProvider } from './context/ThemeContext';
+import Button from './Button';
+import Header from './Header';
+import Main from './Main';
+
+function App() {
+  return (
+    <ThemeProvider>
+      <Header />
+      <Main />
+      <Button />
+    </ThemeProvider>
+  );
+}
+
+export default App;
+```
+
+
+Custom Hooks for Context
+------------------------
+
+Create custom hooks to simplify context consumption:
+
+```jsx
+import { createContext, useContext, useState } from 'react';
+
+const ThemeContext = createContext();
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// Custom hook for using theme context
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  
+  return context;
+}
+
+// Usage
+function MyComponent() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return <button onClick={toggleTheme}>{theme}</button>;
+}
+```
+
+
+Practical Examples
+------------------
+
+1. Authentication Context
+--------------------------
+```jsx
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      // Verify token with server
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setUser(data.user);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, []);
+  
+  const login = async (email, password) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      
+      const data = await response.json();
+      setUser(data.user);
+      localStorage.setItem('token', data.token);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  };
+  
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+  };
+  
+  const signup = async (email, password, name) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Signup failed');
+      }
+      
+      const data = await response.json();
+      setUser(data.user);
+      localStorage.setItem('token', data.token);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  };
+  
+  return (
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      error,
+      login,
+      logout,
+      signup,
+      isAuthenticated: !!user
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  
+  return context;
+}
+
+// Usage
+function LoginPage() {
+  const { login, loading, error } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      await login(email, password);
+      // Redirect to dashboard
+    } catch (err) {
+      // Error is shown via error state
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        type="email"
+        placeholder="Email"
+      />
+      <input
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        type="password"
+        placeholder="Password"
+      />
+      
+      {error && <p className="error">{error}</p>}
+      
+      <button type="submit" disabled={loading}>
+        {loading ? 'Logging in...' : 'Login'}
+      </button>
+    </form>
+  );
+}
+```
+
+2. Notification/Toast Context
+------------------------------
+```jsx
+import { createContext, useContext, useState, useCallback } from 'react';
+
+const NotificationContext = createContext();
+
+export function NotificationProvider({ children }) {
+  const [notifications, setNotifications] = useState([]);
+  
+  const addNotification = useCallback((message, type = 'info', duration = 3000) => {
+    const id = Date.now();
+    const notification = { id, message, type };
+    
+    setNotifications(prev => [...prev, notification]);
+    
+    // Auto-remove after duration
+    if (duration) {
+      setTimeout(() => {
+        removeNotification(id);
+      }, duration);
+    }
+    
+    return id;
+  }, []);
+  
+  const removeNotification = useCallback((id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+  
+  return (
+    <NotificationContext.Provider value={{ notifications, addNotification, removeNotification }}>
+      {children}
+      <NotificationList />
+    </NotificationContext.Provider>
+  );
+}
+
+function NotificationList() {
+  const { notifications, removeNotification } = useContext(NotificationContext);
+  
+  return (
+    <div className="notification-container">
+      {notifications.map(notification => (
+        <div
+          key={notification.id}
+          className={`notification notification-${notification.type}`}
+        >
+          {notification.message}
+          <button onClick={() => removeNotification(notification.id)}>×</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function useNotification() {
+  const context = useContext(NotificationContext);
+  
+  if (!context) {
+    throw new Error('useNotification must be used within NotificationProvider');
+  }
+  
+  return context;
+}
+
+// Usage
+function MyComponent() {
+  const { addNotification } = useNotification();
+  
+  const handleClick = () => {
+    addNotification('Operation successful!', 'success');
+  };
+  
+  const handleError = () => {
+    addNotification('An error occurred', 'error', 5000);
+  };
+  
+  return (
+    <div>
+      <button onClick={handleClick}>Show Success</button>
+      <button onClick={handleError}>Show Error</button>
+    </div>
+  );
+}
+```
+
+3. Language/Localization Context
+---------------------------------
+```jsx
+import { createContext, useContext, useState } from 'react';
+
+const translations = {
+  en: {
+    greeting: 'Hello',
+    goodbye: 'Goodbye',
+    welcome: 'Welcome to our app'
+  },
+  es: {
+    greeting: 'Hola',
+    goodbye: 'Adiós',
+    welcome: 'Bienvenido a nuestra aplicación'
+  },
+  fr: {
+    greeting: 'Bonjour',
+    goodbye: 'Au revoir',
+    welcome: 'Bienvenue dans notre application'
+  }
+};
+
+const LanguageContext = createContext();
+
+export function LanguageProvider({ children }) {
+  const [language, setLanguage] = useState('en');
+  
+  const t = (key) => {
+    return translations[language][key] || key;
+  };
+  
+  const changeLanguage = (lang) => {
+    if (translations[lang]) {
+      setLanguage(lang);
+      localStorage.setItem('language', lang);
+    }
+  };
+  
+  return (
+    <LanguageContext.Provider value={{ language, t, changeLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  
+  if (!context) {
+    throw new Error('useLanguage must be used within LanguageProvider');
+  }
+  
+  return context;
+}
+
+// Usage
+function Header() {
+  const { t, language, changeLanguage } = useLanguage();
+  
+  return (
+    <header>
+      <h1>{t('greeting')}</h1>
+      <select value={language} onChange={(e) => changeLanguage(e.target.value)}>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
+    </header>
+  );
+}
+```
+
+
+Multiple Contexts
+-----------------
+
+Using multiple contexts together:
+
+```jsx
+import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { LanguageProvider } from './context/LanguageContext';
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <NotificationProvider>
+            <MainApp />
+          </NotificationProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </LanguageProvider>
+  );
+}
+
+// Component using multiple contexts
+function Dashboard() {
+  const { user } = useAuth();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const { addNotification } = useNotification();
+  
+  return (
+    <div className={`dashboard dashboard-${theme}`}>
+      <h1>{t('welcome')}, {user.name}!</h1>
+      {/* Dashboard content */}
+    </div>
+  );
+}
+```
+
+
+4.2 COMPONENT PATTERNS
+----------------------
+
+Higher-Order Components (HOC)
+-----------------------------
+
+A Higher-Order Component is a function that takes a component and returns an enhanced version.
+
+1. Basic HOC
+------------
+```jsx
+function withLoading(Component) {
+  return function WithLoadingComponent({ isLoading, ...props }) {
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+    
+    return <Component {...props} />;
+  };
+}
+
+// Usage
+function UserProfile({ user }) {
+  return <div>{user.name}</div>;
+}
+
+const UserProfileWithLoading = withLoading(UserProfile);
+
+// In app
+<UserProfileWithLoading isLoading={true} />
+<UserProfileWithLoading isLoading={false} user={{ name: 'John' }} />
+```
+
+2. HOC with Data Fetching
+--------------------------
+```jsx
+function withDataFetching(url) {
+  return function WithDataFetching(Component) {
+    return function FetchedComponent(props) {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      
+      useEffect(() => {
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            setData(data);
+            setLoading(false);
+          })
+          .catch(err => {
+            setError(err);
+            setLoading(false);
+          });
+      }, []);
+      
+      return (
+        <Component
+          data={data}
+          loading={loading}
+          error={error}
+          {...props}
+        />
+      );
+    };
+  };
+}
+
+// Usage
+function UserList({ data, loading, error }) {
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error loading users</div>;
+  
+  return (
+    <ul>
+      {data.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+const UserListWithData = withDataFetching('/api/users')(UserList);
+
+// In app
+<UserListWithData />
+```
+
+3. HOC with Authentication
+---------------------------
+```jsx
+function withAuth(Component) {
+  return function ProtectedComponent(props) {
+    const { user, loading } = useAuth();
+    
+    if (loading) {
+      return <div>Loading...</div>;
+    }
+    
+    if (!user) {
+      return <Redirect to="/login" />;
+    }
+    
+    return <Component user={user} {...props} />;
+  };
+}
+
+// Usage
+function Dashboard() {
+  return <div>Dashboard content</div>;
+}
+
+const ProtectedDashboard = withAuth(Dashboard);
+
+// In router
+<Route path="/dashboard" component={ProtectedDashboard} />
+```
+
+4. Composing Multiple HOCs
+---------------------------
+```jsx
+function MyComponent() {
+  return <div>My Component</div>;
+}
+
+// Compose multiple HOCs
+const Enhanced = withAuth(
+  withLoading(
+    withDataFetching('/api/data')(MyComponent)
+  )
+);
+
+// Or using a compose helper
+const compose = (...hocs) => (Component) => 
+  hocs.reduceRight((Comp, hoc) => hoc(Comp), Component);
+
+const Enhanced = compose(
+  withAuth,
+  withLoading,
+  withDataFetching('/api/data')
+)(MyComponent);
+```
+
+
+Render Props Pattern
+--------------------
+
+A technique for sharing code between components using a prop that is a function.
+
+1. Basic Render Props
+---------------------
+```jsx
+function MouseTracker({ render }) {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  const handleMouseMove = (event) => {
+    setPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+  };
+  
+  return (
+    <div onMouseMove={handleMouseMove}>
+      {render(position)}
+    </div>
+  );
+}
+
+// Usage
+function App() {
+  return (
+    <MouseTracker
+      render={({ x, y }) => (
+        <p>
+          Mouse position: ({x}, {y})
+        </p>
+      )}
+    />
+  );
+}
+```
+
+2. Using children as Render Prop
+--------------------------------
+```jsx
+function DataFetcher({ url, children }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        setData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err);
+        setLoading(false);
+      });
+  }, [url]);
+  
+  return children({ data, loading, error });
+}
+
+// Usage
+function App() {
+  return (
+    <DataFetcher url="/api/users">
+      {({ data, loading, error }) => (
+        <>
+          {loading && <div>Loading...</div>}
+          {error && <div>Error: {error.message}</div>}
+          {data && (
+            <ul>
+              {data.map(user => (
+                <li key={user.id}>{user.name}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </DataFetcher>
+  );
+}
+```
+
+3. Render Props vs Hooks
+------------------------
+Modern React prefers hooks over render props, but both are valid:
+
+```jsx
+// Render Props (older pattern)
+<DataFetcher url="/api/users">
+  {({ data, loading, error }) => (
+    // Render JSX
+  )}
+</DataFetcher>
+
+// Hooks (modern pattern) - preferred
+function MyComponent() {
+  const { data, loading, error } = useFetch('/api/users');
+  
+  // Render JSX
+}
+```
+
+
+Compound Components
+-------------------
+
+Components that work together to form a complete UI.
+
+1. Tabs Component
+-----------------
+```jsx
+import { createContext, useContext, useState } from 'react';
+
+const TabsContext = createContext();
+
+function Tabs({ children }) {
+  const [activeTab, setActiveTab] = useState(0);
+  
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div className="tabs">{children}</div>
+    </TabsContext.Provider>
+  );
+}
+
+function TabList({ children }) {
+  return <div className="tab-list">{children}</div>;
+}
+
+function TabButton({ index, children }) {
+  const { activeTab, setActiveTab } = useContext(TabsContext);
+  
+  return (
+    <button
+      className={`tab-button ${activeTab === index ? 'active' : ''}`}
+      onClick={() => setActiveTab(index)}
+    >
+      {children}
+    </button>
+  );
+}
+
+function TabPanels({ children }) {
+  const { activeTab } = useContext(TabsContext);
+  
+  return <div className="tab-panels">{children[activeTab]}</div>;
+}
+
+function TabPanel({ children }) {
+  return <div className="tab-panel">{children}</div>;
+}
+
+// Usage
+function App() {
+  return (
+    <Tabs>
+      <TabList>
+        <TabButton index={0}>Tab 1</TabButton>
+        <TabButton index={1}>Tab 2</TabButton>
+        <TabButton index={2}>Tab 3</TabButton>
+      </TabList>
+      <TabPanels>
+        <TabPanel>Content 1</TabPanel>
+        <TabPanel>Content 2</TabPanel>
+        <TabPanel>Content 3</TabPanel>
+      </TabPanels>
+    </Tabs>
+  );
+}
+
+// Export as compound component
+Tabs.List = TabList;
+Tabs.Button = TabButton;
+Tabs.Panels = TabPanels;
+Tabs.Panel = TabPanel;
+
+// Alternative usage
+<Tabs>
+  <Tabs.List>
+    <Tabs.Button index={0}>Tab 1</Tabs.Button>
+  </Tabs.List>
+  <Tabs.Panels>
+    <Tabs.Panel>Content</Tabs.Panel>
+  </Tabs.Panels>
+</Tabs>
+```
+
+2. Accordion Component
+----------------------
+```jsx
+import { createContext, useContext, useState } from 'react';
+
+const AccordionContext = createContext();
+
+function Accordion({ children }) {
+  const [openItems, setOpenItems] = useState(new Set());
+  
+  const toggleItem = (id) => {
+    const newOpenItems = new Set(openItems);
+    if (newOpenItems.has(id)) {
+      newOpenItems.delete(id);
+    } else {
+      newOpenItems.add(id);
+    }
+    setOpenItems(newOpenItems);
+  };
+  
+  return (
+    <AccordionContext.Provider value={{ openItems, toggleItem }}>
+      <div className="accordion">{children}</div>
+    </AccordionContext.Provider>
+  );
+}
+
+function AccordionItem({ id, children }) {
+  const { openItems, toggleItem } = useContext(AccordionContext);
+  const isOpen = openItems.has(id);
+  
+  return (
+    <div className="accordion-item">
+      <button
+        className="accordion-trigger"
+        onClick={() => toggleItem(id)}
+      >
+        {children.title}
+      </button>
+      {isOpen && (
+        <div className="accordion-content">
+          {children.content}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Usage
+<Accordion>
+  <AccordionItem
+    id="item1"
+    children={{
+      title: 'Section 1',
+      content: 'Content 1'
+    }}
+  />
+  <AccordionItem
+    id="item2"
+    children={{
+      title: 'Section 2',
+      content: 'Content 2'
+    }}
+  />
+</Accordion>
+```
+
+
+Controlled vs Uncontrolled Components
+-------------------------------------
+
+1. Controlled Components
+------------------------
+React controls the input value:
+
+```jsx
+function ControlledInput() {
+  const [value, setValue] = useState('');
+  
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      placeholder="Controlled input"
+    />
+  );
+}
+```
+
+Pros:
+- Single source of truth
+- Can validate in real-time
+- Can disable submit if invalid
+- Easy to reset
+
+Cons:
+- More code
+
+2. Uncontrolled Components
+---------------------------
+DOM controls the input value:
+
+```jsx
+function UncontrolledInput() {
+  const inputRef = useRef(null);
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Value:', inputRef.current.value);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Uncontrolled input"
+        defaultValue="Initial value"
+      />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+Pros:
+- Less code
+- Useful for integrating with non-React code
+
+Cons:
+- Can't validate in real-time
+- Harder to clear/reset
+- Single source of truth in DOM
+
+When to use:
+- Controlled: Most cases, especially forms
+- Uncontrolled: File inputs, integrations, simple cases
+
+
+4.3 CODE SPLITTING AND LAZY LOADING
+------------------------------------
+
+Code Splitting
+---------------
+
+Splitting code into chunks that are loaded on demand.
+
+Benefits:
+- Faster initial page load
+- Load features only when needed
+- Better performance metrics
+
+1. Dynamic Imports
+------------------
+```jsx
+// Load module on demand
+const loadModule = async () => {
+  const module = await import('./MyModule');
+  return module;
+};
+
+// Usage
+button.addEventListener('click', async () => {
+  const module = await loadModule();
+  module.doSomething();
+});
+```
+
+2. React.lazy and Suspense
+----------------------------
+```jsx
+import { lazy, Suspense } from 'react';
+
+// Code split the component
+const HeavyComponent = lazy(() => import('./HeavyComponent'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HeavyComponent />
+    </Suspense>
+  );
+}
+```
+
+3. Route-Based Code Splitting
+------------------------------
+```jsx
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Split code by route
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+}
+```
+
+4. Error Boundaries
+-------------------
+```jsx
+import { lazy, Suspense } from 'react';
+
+const LazyComponent = lazy(() => import('./LazyComponent'));
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong. Please refresh the page.</div>;
+    }
+    
+    return this.props.children;
+  }
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+5. Component-Level Code Splitting
+----------------------------------
+```jsx
+import { lazy, Suspense, useState } from 'react';
+
+const Modal = lazy(() => import('./Modal'));
+
+function App() {
+  const [showModal, setShowModal] = useState(false);
+  
+  return (
+    <div>
+      <button onClick={() => setShowModal(true)}>Open Modal</button>
+      
+      {showModal && (
+        <Suspense fallback={<div>Loading Modal...</div>}>
+          <Modal onClose={() => setShowModal(false)} />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+```
+
+6. Preloading Lazy Components
+------------------------------
+```jsx
+import { lazy, Suspense } from 'react';
+
+const HeavyComponent = lazy(() => import('./HeavyComponent'));
+
+// Preload component
+const preloadComponent = (componentLoader) => {
+  componentLoader();
+};
+
+function App() {
+  // Preload when user hovers
+  const handleMouseEnter = () => {
+    preloadComponent(() => import('./HeavyComponent'));
+  };
+  
+  return (
+    <div
+      onMouseEnter={handleMouseEnter}
+    >
+      <Suspense fallback={<div>Loading...</div>}>
+        <HeavyComponent />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+
+PRACTICE EXERCISES
+------------------
+
+Exercise 1: Theme Switcher
+---------------------------
+Create a theme context with:
+- Light/dark mode toggle
+- Persist theme preference
+- Use across multiple components
+- Custom hook for easy access
+
+Exercise 2: Authentication System
+---------------------------------
+Build authentication context with:
+- Login/logout functionality
+- Protected routes
+- Loading states
+- Error handling
+- Token persistence
+
+Exercise 3: Notification System
+-------------------------------
+Implement a notification context with:
+- Toast notifications
+- Different notification types
+- Auto-dismiss
+- Custom hook for adding notifications
+- Notification list component
+
+Exercise 4: HOC for Analytics
+------------------------------
+Create HOC that:
+- Tracks component mount/unmount
+- Logs component name
+- Measures render time
+- Tracks prop changes
+
+Exercise 5: Lazy-Loaded Dashboard
+---------------------------------
+Build a dashboard with:
+- Multiple pages code-split
+- Suspense fallback
+- Error boundary
+- Preload on navigation
+- Analytics tracking
+
+
+COMMON MISTAKES & TIPS
+-----------------------
+
+Common Mistakes:
+1. Passing object literals as context value (causes re-renders)
+2. Not memoizing context value
+3. Deep nesting of multiple contexts
+4. Not using custom hooks
+5. Lazy loading too much
+6. Not providing error boundaries
+7. Forgetting to add error handling
+
+Tips:
+1. Memoize context value with useMemo
+2. Use custom hooks for context consumption
+3. Split contexts by concern
+4. Lazy load route components, not all
+5. Provide proper loading states
+6. Use error boundaries with lazy loading
+7. Consider performance impact of context updates
+8. Test context with provider at test level
+
+
+NEXT STEPS
+----------
+
+You've completed Module 4! You should now understand:
+✓ Creating and using Context API
+✓ Custom hooks for context
+✓ Authentication and notification contexts
+✓ Higher-Order Components (HOCs)
+✓ Render props pattern
+✓ Compound components
+✓ Controlled vs uncontrolled components
+✓ Code splitting with lazy and Suspense
+✓ Error boundaries
+
+Next up: Module 5 - Routing
+Learn how to navigate between pages and create multi-page applications with React Router.

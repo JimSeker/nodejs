@@ -1,0 +1,196 @@
+MODULE 13: BUILD & DEPLOYMENT
+==============================
+
+13.1 BUILDING FOR PRODUCTION
+---------------------------
+- Use `npm run build` (Vite: optimized Rollup build).
+- Ensure `NODE_ENV=production` for minification/tree-shaking.
+- Check bundle size and chunking.
+
+Vite Production Build
+---------------------
+```bash
+npm run build
+npm run preview
+```
+
+
+13.2 ENVIRONMENT VARIABLES
+--------------------------
+- Vite: variables prefixed with `VITE_` are exposed to client.
+- Create `.env`, `.env.development`, `.env.production`.
+- Never expose secrets in client env vars.
+
+Example
+-------
+```
+VITE_API_URL=https://api.example.com
+```
+```tsx
+const apiUrl = import.meta.env.VITE_API_URL;
+```
+
+
+13.3 CONFIGURING CACHING & HEADERS
+----------------------------------
+- Set long cache for hashed static assets (e.g., `Cache-Control: public, max-age=31536000, immutable`).
+- Set shorter cache for HTML (e.g., `no-cache`).
+- Enable gzip/brotli compression on server/CDN.
+
+
+13.4 ASSET OPTIMIZATION
+-----------------------
+- Prefer modern formats (WebP/AVIF); size images to display width.
+- Use `loading="lazy"` for below-the-fold images.
+- Preload critical fonts; subset to used glyphs; `font-display: swap`.
+
+
+13.5 ROUTING & SPA DEPLOYMENTS
+------------------------------
+- For client-side routers (React Router), configure rewrite to `index.html` (e.g., Netlify `_redirects`, Vercel `rewrites`).
+- Ensure 404 routes render app shell.
+
+Netlify `_redirects`
+--------------------
+```
+/*    /index.html   200
+```
+
+Vercel `vercel.json`
+--------------------
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+
+13.6 SECURITY HEADERS (RECOMMENDED)
+-----------------------------------
+- `Content-Security-Policy` tailored to your assets/APIs.
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`.
+- `X-Content-Type-Options: nosniff`.
+- `Referrer-Policy: no-referrer-when-downgrade` (or stricter).
+- `X-Frame-Options: DENY` (unless embedding needed).
+
+
+13.7 CI/CD BASICS
+------------------
+- Automate: install deps, run tests/lint, build artifact, deploy.
+- Cache dependencies (npm cache, pnpm store) for speed.
+- Fail fast on tests/lint.
+
+GitHub Actions (Vite) Example
+-----------------------------
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test -- --runInBand
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+```
+
+
+13.8 DEPLOYMENT TARGETS
+-----------------------
+- Static hosting/CDN: Netlify, Vercel, Cloudflare Pages, GitHub Pages (for static builds).
+- App platforms: Render, Fly.io, AWS Amplify, Azure Static Web Apps.
+- Pick closest PoPs/CDN for latency.
+
+
+13.9 BACKEND/API INTEGRATION
+----------------------------
+- Configure CORS correctly for API domain.
+- Prefer relative URLs with reverse proxy in prod.
+- For auth, store tokens securely (httpOnly cookies if possible).
+
+
+13.10 ENVIRONMENT-SPECIFIC CONFIG
+---------------------------------
+- Separate configs for dev/stage/prod (API base URL, feature flags).
+- Use feature flags to gate unfinished features.
+- Keep secrets in server-side storage (not in client env vars).
+
+
+13.11 OBSERVABILITY AFTER DEPLOY
+--------------------------------
+- Set up error monitoring (Sentry, LogRocket) and performance (Vitals, RUM).
+- Track Core Web Vitals (LCP, FID, CLS, INP) via analytics.
+- Add logging for API failures and user flows (respect privacy).
+
+
+13.12 ROLLBACK & RELEASE STRATEGY
+---------------------------------
+- Keep previous build artifacts to enable rollbacks.
+- Use staged rollouts/canary deploys when possible.
+- Monitor after release; rollback on elevated errors.
+
+
+13.13 TESTING BEFORE DEPLOY
+---------------------------
+- Run unit/integration tests and e2e (Cypress/Playwright) in CI.
+- Lighthouse CI for performance/accessibility budgets.
+- Visual regression (Chromatic/Playwright screenshots) for UI changes.
+
+
+13.14 ACCESSIBILITY & SEO CHECKS
+--------------------------------
+- Ensure meta tags (title, description, og tags) and correct language attributes.
+- Provide sitemap/robots for crawlers if appropriate.
+- Avoid blocking content with heavy scripts; ensure focus order is correct.
+
+
+13.15 ZERO-DOWNTIME CONSIDERATIONS
+----------------------------------
+- Use atomic deploys (immutable build outputs + instant switch).
+- Serve from CDN with cache invalidation; avoid mutating assets in place.
+
+
+13.16 PRACTICE EXERCISES
+------------------------
+1) Add env vars for API base URL; use Vite `import.meta.env` safely.
+2) Configure Netlify `_redirects` for SPA routing and deploy a build.
+3) Create a GitHub Actions workflow to test and build; upload `dist` artifact.
+4) Add basic security headers in a sample `vercel.json`/`_headers` file.
+5) Run Lighthouse on the preview build; document LCP/CLS/INP and set budgets.
+
+
+13.17 COMMON MISTAKES & TIPS
+----------------------------
+Common Mistakes
+- Shipping secrets in client bundles.
+- Forgetting SPA rewrites causing 404s on refresh.
+- Skipping preview of production build locally.
+- Missing compression/caching headers.
+- No monitoring post-deploy.
+
+Tips
+- Always preview `npm run preview` before shipping.
+- Keep builds deterministic; lockfile committed.
+- Cache-bust via hashed filenames; serve with long cache.
+- Automate tests/build in CI; block deploy on failures.
+- Add runtime checks for required env vars.
+
+
+NEXT STEPS
+----------
+You finished Module 13! You can now:
+✓ Build production bundles and manage env vars safely
+✓ Configure caching, routing rewrites, and security headers
+✓ Automate CI/CD and choose deployment targets
+✓ Monitor, test, and roll back deployments confidently
+
+Next up: Module 14 – Modern React Patterns (already prepared), then Module 15 – Best Practices/Capstone.

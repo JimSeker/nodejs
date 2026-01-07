@@ -1,0 +1,979 @@
+MODULE 5: ROUTING
+=================
+
+5.1 REACT ROUTER BASICS
+-----------------------
+
+What is Routing?
+----------------
+Routing is the process of navigating between different views/pages in a single-page application (SPA).
+
+Benefits of React Router:
+- Single-page application experience
+- No full page reloads
+- URL-based navigation
+- Browser history support
+- Dynamic route matching
+- Nested routing
+- Protected routes
+
+
+Installing React Router
+-----------------------
+
+```bash
+npm install react-router-dom
+```
+
+Current version: v6.x (latest)
+
+
+Setting Up Basic Routes
+-----------------------
+
+1. Basic Route Configuration
+----------------------------
+```jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+```
+
+Components:
+- `BrowserRouter`: Wrapper that enables routing
+- `Routes`: Container for all routes
+- `Route`: Maps URL path to component
+
+
+2. Multiple Route Syntax
+------------------------
+```jsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/about" element={<About />} />
+  <Route path="/services" element={<Services />} />
+  <Route path="/blog" element={<Blog />} />
+  <Route path="*" element={<NotFound />} />
+</Routes>
+```
+
+Wildcard route (`*`) matches any unmatched paths.
+
+
+3. Layout with Routes
+---------------------
+```jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
+import Footer from './components/Footer';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+      <Footer />
+    </BrowserRouter>
+  );
+}
+```
+
+Header and Footer render on all pages.
+
+
+Link and NavLink Components
+---------------------------
+
+1. Link Component
+-----------------
+Basic navigation without page reload:
+
+```jsx
+import { Link } from 'react-router-dom';
+
+function Navigation() {
+  return (
+    <nav>
+      <Link to="/">Home</Link>
+      <Link to="/about">About</Link>
+      <Link to="/contact">Contact</Link>
+    </nav>
+  );
+}
+```
+
+2. NavLink Component
+--------------------
+NavLink adds active state styling:
+
+```jsx
+import { NavLink } from 'react-router-dom';
+
+function Navigation() {
+  return (
+    <nav>
+      <NavLink to="/">Home</NavLink>
+      <NavLink to="/about">About</NavLink>
+      <NavLink to="/contact">Contact</NavLink>
+    </nav>
+  );
+}
+```
+
+CSS:
+```css
+a.active {
+  color: #ff5733;
+  font-weight: bold;
+}
+```
+
+3. NavLink with Custom Styling
+-------------------------------
+```jsx
+<NavLink
+  to="/about"
+  className={({ isActive }) => isActive ? 'active' : ''}
+  style={({ isActive }) => ({
+    color: isActive ? '#ff5733' : '#333'
+  })}
+>
+  About
+</NavLink>
+```
+
+4. NavLink with End Attribute
+------------------------------
+By default, NavLink matches any route starting with the path. Use `end` to match exact path:
+
+```jsx
+<NavLink to="/" end>Home</NavLink>
+// Active only when path is exactly "/"
+
+<NavLink to="/products">Products</NavLink>
+// Active for "/products" and "/products/details"
+
+<NavLink to="/products" end>Products</NavLink>
+// Active only for "/products"
+```
+
+
+Programmatic Navigation
+-----------------------
+
+Navigate using the `useNavigate` hook:
+
+1. Basic Navigation
+-------------------
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+function LoginForm() {
+  const navigate = useNavigate();
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Login logic
+    const success = await login(email, password);
+    
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+2. Navigation with Replace
+---------------------------
+Replace prevents going back to previous page:
+
+```jsx
+const navigate = useNavigate();
+
+// Normal navigation (can go back)
+navigate('/home');
+
+// Replace (can't go back to previous page)
+navigate('/login', { replace: true });
+```
+
+3. Navigation with State
+------------------------
+Pass data to next route:
+
+```jsx
+// Sending state
+const navigate = useNavigate();
+navigate('/order-confirmation', {
+  state: { orderId: 12345, total: 99.99 }
+});
+
+// Receiving state
+import { useLocation } from 'react-router-dom';
+
+function OrderConfirmation() {
+  const location = useLocation();
+  const { orderId, total } = location.state;
+  
+  return (
+    <div>
+      <h1>Order Confirmed</h1>
+      <p>Order ID: {orderId}</p>
+      <p>Total: ${total}</p>
+    </div>
+  );
+}
+```
+
+4. Go Back
+----------
+```jsx
+const navigate = useNavigate();
+
+// Go back one page
+navigate(-1);
+
+// Go back two pages
+navigate(-2);
+```
+
+
+Route Parameters
+----------------
+
+1. URL Parameters
+-----------------
+Capture dynamic parts of URL:
+
+```jsx
+<Routes>
+  <Route path="/user/:id" element={<UserProfile />} />
+</Routes>
+
+function UserProfile() {
+  const { id } = useParams();
+  
+  return <h1>User ID: {id}</h1>;
+}
+```
+
+2. Multiple Parameters
+----------------------
+```jsx
+<Route path="/blog/:category/:postId" element={<BlogPost />} />
+
+function BlogPost() {
+  const { category, postId } = useParams();
+  
+  return (
+    <div>
+      <h1>{category}</h1>
+      <p>Post: {postId}</p>
+    </div>
+  );
+}
+```
+
+3. Optional Parameters
+----------------------
+```jsx
+<Route path="/user/:id?" element={<UserProfile />} />
+
+function UserProfile() {
+  const { id } = useParams();
+  
+  if (!id) {
+    return <h1>All Users</h1>;
+  }
+  
+  return <h1>User {id}</h1>;
+}
+```
+
+4. Linking to Routes with Parameters
+------------------------------------
+```jsx
+<Link to={`/user/${userId}`}>View User</Link>
+<Link to={`/blog/${category}/${postId}`}>Read Post</Link>
+```
+
+
+Query Strings
+-------------
+
+1. Using Query Parameters
+--------------------------
+```jsx
+import { useSearchParams } from 'react-router-dom';
+
+function FilteredProducts() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Read query params
+  const category = searchParams.get('category');
+  const sort = searchParams.get('sort');
+  const page = searchParams.get('page') || '1';
+  
+  // Set query params
+  const handleFilter = (category) => {
+    setSearchParams({ category, sort: 'price', page: '1' });
+  };
+  
+  return (
+    <div>
+      <p>Category: {category}</p>
+      <p>Sort: {sort}</p>
+      <p>Page: {page}</p>
+      
+      <button onClick={() => handleFilter('electronics')}>
+        Electronics
+      </button>
+    </div>
+  );
+}
+
+// URLs:
+// /products
+// /products?category=electronics&sort=price&page=1
+// /products?category=books&sort=rating
+```
+
+2. useLocation for Complete URL Info
+-------------------------------------
+```jsx
+import { useLocation } from 'react-router-dom';
+
+function CurrentPage() {
+  const location = useLocation();
+  
+  return (
+    <div>
+      <p>Pathname: {location.pathname}</p>
+      <p>Search: {location.search}</p>
+      <p>Hash: {location.hash}</p>
+      <p>State: {JSON.stringify(location.state)}</p>
+    </div>
+  );
+}
+
+// Example:
+// URL: /products?category=books#reviews
+// pathname: "/products"
+// search: "?category=books"
+// hash: "#reviews"
+```
+
+3. Custom Hook for Query Parameters
+------------------------------------
+```jsx
+function useQueryParams() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const getParam = (key) => searchParams.get(key);
+  
+  const setParam = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set(key, value);
+    setSearchParams(newParams);
+  };
+  
+  const removeParam = (key) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete(key);
+    setSearchParams(newParams);
+  };
+  
+  const clearParams = () => {
+    setSearchParams({});
+  };
+  
+  return { getParam, setParam, removeParam, clearParams };
+}
+
+// Usage
+function SearchPage() {
+  const { getParam, setParam } = useQueryParams();
+  const query = getParam('q');
+  
+  const handleSearch = (term) => {
+    setParam('q', term);
+  };
+  
+  return <div>{query}</div>;
+}
+```
+
+
+5.2 ADVANCED ROUTING
+--------------------
+
+Nested Routes
+-------------
+
+1. Basic Nested Routes
+----------------------
+```jsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/dashboard" element={<DashboardLayout />}>
+    <Route path="overview" element={<Overview />} />
+    <Route path="analytics" element={<Analytics />} />
+    <Route path="settings" element={<Settings />} />
+  </Route>
+</Routes>
+
+function DashboardLayout() {
+  return (
+    <div className="dashboard">
+      <aside className="sidebar">
+        <NavLink to="/dashboard/overview">Overview</NavLink>
+        <NavLink to="/dashboard/analytics">Analytics</NavLink>
+        <NavLink to="/dashboard/settings">Settings</NavLink>
+      </aside>
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+```
+
+2. Outlet Component
+-------------------
+`Outlet` renders nested route components:
+
+```jsx
+import { Outlet } from 'react-router-dom';
+
+function Layout() {
+  return (
+    <div>
+      <Header />
+      <Outlet />
+      <Footer />
+    </div>
+  );
+}
+
+// All nested routes render within <Outlet />
+```
+
+3. Multiple Nested Levels
+--------------------------
+```jsx
+<Routes>
+  <Route path="/" element={<Layout />}>
+    <Route index element={<Home />} />
+    <Route path="dashboard" element={<DashboardLayout />}>
+      <Route path="products" element={<Products />}>
+        <Route path=":id" element={<ProductDetail />} />
+      </Route>
+      <Route path="orders" element={<Orders />} />
+    </Route>
+  </Route>
+</Routes>
+```
+
+
+Protected Routes
+----------------
+
+1. Protected Route Component
+----------------------------
+```jsx
+import { Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+}
+
+// Usage
+<Routes>
+  <Route path="/login" element={<Login />} />
+  <Route
+    path="/dashboard"
+    element={
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    }
+  />
+</Routes>
+```
+
+2. Role-Based Access
+--------------------
+```jsx
+function RoleProtectedRoute({ children, requiredRole }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (user.role !== requiredRole) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return children;
+}
+
+// Usage
+<Route
+  path="/admin"
+  element={
+    <RoleProtectedRoute requiredRole="admin">
+      <AdminPanel />
+    </RoleProtectedRoute>
+  }
+/>
+```
+
+3. Conditional Rendering Based on Auth
+----------------------------------------
+```jsx
+function ProtectedRoute({ element: Component, ...rest }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+  
+  return user ? Component : <Navigate to="/login" replace />;
+}
+```
+
+
+Redirects and Navigation
+------------------------
+
+1. Redirect to Login
+--------------------
+```jsx
+import { Navigate } from 'react-router-dom';
+
+function PrivatePage() {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <div>Private content</div>;
+}
+```
+
+2. Redirect Old Routes
+----------------------
+```jsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/old-about" element={<Navigate to="/about" replace />} />
+  <Route path="/about" element={<About />} />
+</Routes>
+```
+
+3. 404 Pages and Fallbacks
+---------------------------
+```jsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/about" element={<About />} />
+  <Route path="/not-found" element={<NotFound />} />
+  <Route path="*" element={<Navigate to="/not-found" replace />} />
+</Routes>
+
+function NotFound() {
+  return (
+    <div className="not-found">
+      <h1>404 - Page Not Found</h1>
+      <p>The page you're looking for doesn't exist.</p>
+      <Link to="/">Go Home</Link>
+    </div>
+  );
+}
+```
+
+
+Route Configuration as Array
+-----------------------------
+
+For large applications, define routes as data:
+
+```jsx
+const routes = [
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      { index: true, element: <Home /> },
+      {
+        path: 'dashboard',
+        element: <DashboardLayout />,
+        children: [
+          { path: 'overview', element: <Overview /> },
+          { path: 'analytics', element: <Analytics /> }
+        ]
+      },
+      { path: 'about', element: <About /> }
+    ]
+  }
+];
+
+function App() {
+  const routeElements = useRoutes(routes);
+  
+  return routeElements;
+}
+```
+
+
+Lazy Loading Routes
+-------------------
+
+Code split routes for better performance:
+
+```jsx
+import { lazy, Suspense } from 'react';
+
+const Home = lazy(() => import('./pages/Home'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Admin = lazy(() => import('./pages/Admin'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+}
+```
+
+
+Dynamic Routes from Data
+------------------------
+
+Generate routes from API data:
+
+```jsx
+function App() {
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetch('/api/routes')
+      .then(res => res.json())
+      .then(data => {
+        setRoutes(data);
+        setLoading(false);
+      });
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  
+  return (
+    <BrowserRouter>
+      <Routes>
+        {routes.map(route => (
+          <Route
+            key={route.id}
+            path={route.path}
+            element={<Page data={route} />}
+          />
+        ))}
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+
+Scroll Restoration
+------------------
+
+Scroll to top on route change:
+
+```jsx
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <ScrollToTop />
+      <Routes>
+        {/* Routes */}
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+
+Active Link Styling
+-------------------
+
+```jsx
+import { NavLink } from 'react-router-dom';
+import './Navigation.css';
+
+function Navigation() {
+  return (
+    <nav>
+      <NavLink 
+        to="/" 
+        className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+      >
+        Home
+      </NavLink>
+      <NavLink 
+        to="/about"
+        className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+      >
+        About
+      </NavLink>
+      <NavLink 
+        to="/services"
+        className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+      >
+        Services
+      </NavLink>
+    </nav>
+  );
+}
+```
+
+CSS:
+```css
+.nav-link {
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.nav-link.active {
+  color: #ff5733;
+  border-bottom: 2px solid #ff5733;
+}
+
+.nav-link:hover {
+  color: #ff5733;
+}
+```
+
+
+Complete Routing Example
+------------------------
+
+```jsx
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Admin = lazy(() => import('./pages/Admin'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<div className="loading">Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="login" element={<Login />} />
+            
+            <Route
+              path="dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="admin"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route path="404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+```
+
+
+PRACTICE EXERCISES
+------------------
+
+Exercise 1: Multi-Page Website
+------------------------------
+Create a website with:
+- Home page
+- About page
+- Services page
+- Contact page
+- Navigation bar with active links
+- 404 page
+
+Exercise 2: Blog Application
+---------------------------
+Build a blog with:
+- List of blog posts
+- Individual post pages with route parameters
+- Category filtering with query params
+- Search functionality
+- Post detail view
+
+Exercise 3: Dashboard with Nested Routes
+---------------------------------------
+Create a dashboard with:
+- Dashboard layout with sidebar
+- Multiple dashboard sections
+- Nested routes (3+ levels)
+- Protected routes
+- Role-based access
+
+Exercise 4: E-commerce Product Pages
+------------------------------------
+Build product pages with:
+- Product listing with filters
+- Individual product pages
+- Category pages
+- Search with query parameters
+- Sort and pagination
+
+Exercise 5: Admin Panel with Role-Based Access
+----------------------------------------------
+Create an admin system with:
+- Login page
+- Protected routes
+- Multiple roles (admin, editor, viewer)
+- Different access levels
+- Redirect to login for unauthorized users
+
+
+COMMON MISTAKES & TIPS
+-----------------------
+
+Common Mistakes:
+1. Not using `replace` on redirects (back button issues)
+2. Forgetting `end` attribute on NavLink
+3. Not handling loading states
+4. Forgetting to wrap with BrowserRouter
+5. Not using Outlet in nested routes
+6. Inefficient route protection
+7. Memory leaks in useEffect
+8. Not lazy loading routes
+
+Tips:
+1. Always use `replace` on redirects
+2. Use Outlet for nested routes
+3. Create reusable ProtectedRoute component
+4. Lazy load route components
+5. Handle loading and error states
+6. Use useSearchParams for filters
+7. Implement scroll to top on navigation
+8. Use NavLink for navigation (not Link)
+9. Create route configuration as data
+10. Test navigation thoroughly
+
+
+NEXT STEPS
+----------
+
+You've completed Module 5! You should now understand:
+✓ Basic routing with React Router v6
+✓ Route configuration and structure
+✓ Link and NavLink components
+✓ Route parameters and query strings
+✓ Programmatic navigation
+✓ Nested routes with Outlet
+✓ Protected and role-based routes
+✓ Redirects and 404 pages
+✓ Lazy loading routes
+✓ Route guards and authentication
+
+Next up: Module 6 - State Management
+Learn about global state management solutions beyond Context API.

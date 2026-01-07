@@ -1,0 +1,1617 @@
+MODULE 1: FUNDAMENTALS
+======================
+
+1.1 INTRODUCTION TO REACT
+--------------------------
+
+What is React?
+--------------
+React is a JavaScript library for building user interfaces, developed and maintained by Meta (Facebook). It was released in 2013 and has become one of the most popular frontend libraries.
+
+Key characteristics:
+- Component-based architecture
+- Declarative programming paradigm
+- Unidirectional data flow
+- Learn once, write anywhere philosophy
+
+Why Use React?
+--------------
+1. **Component Reusability**: Build encapsulated components that manage their own state
+2. **Virtual DOM**: Efficient updates and rendering
+3. **Large Ecosystem**: Vast collection of libraries, tools, and community support
+4. **Strong Community**: Extensive documentation, tutorials, and third-party resources
+5. **Career Opportunities**: High demand in the job market
+6. **Flexibility**: Can be used for web, mobile (React Native), and desktop applications
+7. **Performance**: Optimized rendering through reconciliation algorithm
+8. **Developer Experience**: Great tooling, hot reload, component inspection
+
+Virtual DOM Concept
+-------------------
+The Virtual DOM is a lightweight copy of the actual DOM kept in memory.
+
+How it works:
+1. When state changes, React creates a new Virtual DOM tree
+2. React compares the new tree with the previous one (diffing)
+3. React calculates the minimum number of changes needed
+4. React updates only the changed parts in the real DOM (reconciliation)
+
+Benefits:
+- Improved performance (batch updates)
+- Efficient re-rendering
+- Cross-platform abstraction
+- Predictable updates
+
+Real DOM vs Virtual DOM:
+- Real DOM: Slower, updates entire tree, direct manipulation
+- Virtual DOM: Faster, updates only changes, programmatic representation
+
+React Ecosystem Overview
+------------------------
+Core Libraries:
+- React: Core library for building UI components
+- ReactDOM: DOM-specific methods for web applications
+- React Native: Build native mobile applications
+
+Build Tools:
+- Vite: Fast, modern build tool (recommended)
+- Create React App: Traditional starter (being phased out)
+- Next.js: React framework with SSR/SSG capabilities
+- Parcel: Zero-configuration bundler
+
+State Management:
+- Context API: Built-in state management
+- Redux Toolkit: Predictable state container
+- Zustand: Lightweight state management
+- Jotai: Primitive and flexible state management
+- Recoil: Experimental state management by Meta
+
+Routing:
+- React Router: Standard routing library
+- TanStack Router: Type-safe routing
+- Next.js Router: Built-in file-based routing
+
+Data Fetching:
+- TanStack Query (React Query): Powerful data synchronization
+- SWR: React hooks for data fetching
+- Apollo Client: GraphQL client
+- Axios: Promise-based HTTP client
+
+UI Libraries:
+- Material-UI (MUI): Comprehensive component library
+- Chakra UI: Simple, modular components
+- Ant Design: Enterprise-level UI design
+- shadcn/ui: Customizable component collection
+- Tailwind CSS: Utility-first CSS framework
+
+Testing:
+- Jest: JavaScript testing framework
+- React Testing Library: Test React components
+- Vitest: Fast unit test framework
+- Cypress: End-to-end testing
+- Playwright: Browser automation and testing
+
+Development Tools:
+- React DevTools: Browser extension for debugging
+- ESLint: Code linting
+- Prettier: Code formatting
+- TypeScript: Static type checking
+
+Setting Up Development Environment
+-----------------------------------
+Prerequisites:
+- Node.js (v18 or higher recommended)
+- npm or yarn or pnpm package manager
+- Code editor (VS Code recommended)
+- Modern web browser (Chrome, Firefox, Edge)
+
+Step 1: Install Node.js
+- Download from https://nodejs.org
+- Verify installation: `node --version` and `npm --version`
+
+Step 2: Create a React Project with Vite
+```bash
+npm create vite@latest my-react-app -- --template react
+cd my-react-app
+npm install
+npm run dev
+```
+
+Step 3: Project Structure
+```
+my-react-app/
+├── node_modules/       # Dependencies
+├── public/             # Static assets
+├── src/                # Source files
+│   ├── App.jsx         # Main component
+│   ├── App.css         # Component styles
+│   ├── main.jsx        # Entry point
+│   └── index.css       # Global styles
+├── index.html          # HTML template
+├── package.json        # Project configuration
+└── vite.config.js      # Vite configuration
+```
+
+Step 4: Install VS Code Extensions (Recommended)
+- ES7+ React/Redux/React-Native snippets
+- ESLint
+- Prettier - Code formatter
+- Auto Rename Tag
+- Bracket Pair Colorizer
+- React Developer Tools (browser extension)
+
+Step 5: Run the Development Server
+```bash
+npm run dev
+```
+Visit http://localhost:5173 in your browser
+
+
+1.2 JAVASCRIPT PREREQUISITES
+-----------------------------
+
+ES6+ Features
+-------------
+
+1. Arrow Functions
+------------------
+Traditional function:
+```javascript
+function add(a, b) {
+  return a + b;
+}
+```
+
+Arrow function:
+```javascript
+const add = (a, b) => a + b;
+
+// With multiple statements
+const multiply = (a, b) => {
+  const result = a * b;
+  return result;
+};
+
+// Single parameter (parentheses optional)
+const square = x => x * x;
+
+// No parameters
+const greet = () => console.log('Hello!');
+```
+
+Key differences:
+- Concise syntax
+- Implicit return for single expressions
+- Lexical `this` binding (no own `this`)
+- Cannot be used as constructors
+
+2. Destructuring
+----------------
+Array destructuring:
+```javascript
+const colors = ['red', 'green', 'blue'];
+const [first, second] = colors;
+// first = 'red', second = 'green'
+
+// Skip elements
+const [, , third] = colors;
+// third = 'blue'
+
+// Rest operator
+const [primary, ...others] = colors;
+// primary = 'red', others = ['green', 'blue']
+```
+
+Object destructuring:
+```javascript
+const user = {
+  name: 'John',
+  age: 30,
+  email: 'john@example.com'
+};
+
+const { name, age } = user;
+// name = 'John', age = 30
+
+// Rename variables
+const { name: userName, age: userAge } = user;
+
+// Default values
+const { country = 'USA' } = user;
+
+// Nested destructuring
+const person = {
+  name: 'Jane',
+  address: {
+    city: 'New York',
+    zip: '10001'
+  }
+};
+
+const { address: { city } } = person;
+// city = 'New York'
+```
+
+3. Spread Operator (...)
+-------------------------
+Arrays:
+```javascript
+const arr1 = [1, 2, 3];
+const arr2 = [4, 5, 6];
+const combined = [...arr1, ...arr2];
+// [1, 2, 3, 4, 5, 6]
+
+// Copy array
+const copy = [...arr1];
+
+// Add elements
+const extended = [...arr1, 4, 5];
+```
+
+Objects:
+```javascript
+const obj1 = { a: 1, b: 2 };
+const obj2 = { c: 3, d: 4 };
+const merged = { ...obj1, ...obj2 };
+// { a: 1, b: 2, c: 3, d: 4 }
+
+// Copy object
+const clone = { ...obj1 };
+
+// Override properties
+const updated = { ...obj1, b: 10 };
+// { a: 1, b: 10 }
+```
+
+4. Template Literals
+--------------------
+```javascript
+const name = 'Alice';
+const age = 25;
+
+// String interpolation
+const message = `Hello, ${name}! You are ${age} years old.`;
+
+// Multi-line strings
+const html = `
+  <div>
+    <h1>${name}</h1>
+    <p>Age: ${age}</p>
+  </div>
+`;
+
+// Expression evaluation
+const result = `Sum: ${2 + 2}`;
+```
+
+5. Default Parameters
+----------------------
+```javascript
+function greet(name = 'Guest', greeting = 'Hello') {
+  return `${greeting}, ${name}!`;
+}
+
+greet(); // 'Hello, Guest!'
+greet('John'); // 'Hello, John!'
+greet('Jane', 'Hi'); // 'Hi, Jane!'
+```
+
+6. Rest Parameters
+------------------
+```javascript
+function sum(...numbers) {
+  return numbers.reduce((total, num) => total + num, 0);
+}
+
+sum(1, 2, 3); // 6
+sum(1, 2, 3, 4, 5); // 15
+```
+
+7. Object Shorthand
+-------------------
+```javascript
+const name = 'Bob';
+const age = 30;
+
+// Property shorthand
+const person = { name, age };
+// Same as: { name: name, age: age }
+
+// Method shorthand
+const calculator = {
+  add(a, b) {
+    return a + b;
+  },
+  // Same as: add: function(a, b) { return a + b; }
+};
+```
+
+8. Optional Chaining (?.)
+--------------------------
+```javascript
+const user = {
+  name: 'John',
+  address: {
+    city: 'NYC'
+  }
+};
+
+// Safe property access
+const zip = user?.address?.zip;
+// undefined (no error)
+
+// Safe method calling
+const result = user?.getName?.();
+
+// Safe array access
+const firstItem = array?.[0];
+```
+
+9. Nullish Coalescing (??)
+---------------------------
+```javascript
+const value = null ?? 'default'; // 'default'
+const value2 = undefined ?? 'default'; // 'default'
+const value3 = 0 ?? 'default'; // 0 (not 'default')
+const value4 = '' ?? 'default'; // '' (not 'default')
+
+// vs OR operator
+const a = 0 || 'default'; // 'default'
+const b = 0 ?? 'default'; // 0
+```
+
+
+Array Methods
+-------------
+
+1. map() - Transform each element
+----------------------------------
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(num => num * 2);
+// [2, 4, 6, 8, 10]
+
+const users = [
+  { id: 1, name: 'John' },
+  { id: 2, name: 'Jane' }
+];
+const names = users.map(user => user.name);
+// ['John', 'Jane']
+```
+
+2. filter() - Select elements based on condition
+-------------------------------------------------
+```javascript
+const numbers = [1, 2, 3, 4, 5, 6];
+const evens = numbers.filter(num => num % 2 === 0);
+// [2, 4, 6]
+
+const users = [
+  { id: 1, name: 'John', active: true },
+  { id: 2, name: 'Jane', active: false },
+  { id: 3, name: 'Bob', active: true }
+];
+const activeUsers = users.filter(user => user.active);
+```
+
+3. reduce() - Reduce array to single value
+-------------------------------------------
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+const sum = numbers.reduce((acc, num) => acc + num, 0);
+// 15
+
+// Count occurrences
+const fruits = ['apple', 'banana', 'apple', 'orange', 'banana', 'apple'];
+const count = fruits.reduce((acc, fruit) => {
+  acc[fruit] = (acc[fruit] || 0) + 1;
+  return acc;
+}, {});
+// { apple: 3, banana: 2, orange: 1 }
+```
+
+4. find() - Find first matching element
+----------------------------------------
+```javascript
+const users = [
+  { id: 1, name: 'John' },
+  { id: 2, name: 'Jane' },
+  { id: 3, name: 'Bob' }
+];
+const user = users.find(u => u.id === 2);
+// { id: 2, name: 'Jane' }
+```
+
+5. some() and every()
+---------------------
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+
+// some() - at least one match
+const hasEven = numbers.some(num => num % 2 === 0);
+// true
+
+// every() - all must match
+const allPositive = numbers.every(num => num > 0);
+// true
+```
+
+6. forEach() - Iterate over array
+----------------------------------
+```javascript
+const numbers = [1, 2, 3];
+numbers.forEach((num, index) => {
+  console.log(`Index ${index}: ${num}`);
+});
+```
+
+7. Chaining Methods
+-------------------
+```javascript
+const users = [
+  { id: 1, name: 'John', age: 25, active: true },
+  { id: 2, name: 'Jane', age: 30, active: false },
+  { id: 3, name: 'Bob', age: 35, active: true }
+];
+
+const activeUserNames = users
+  .filter(user => user.active)
+  .map(user => user.name)
+  .sort();
+// ['Bob', 'John']
+```
+
+
+Promises and Async/Await
+------------------------
+
+1. Promises Basics
+------------------
+A Promise represents a value that may be available now, in the future, or never.
+
+States:
+- Pending: Initial state
+- Fulfilled: Operation completed successfully
+- Rejected: Operation failed
+
+```javascript
+const promise = new Promise((resolve, reject) => {
+  const success = true;
+  
+  if (success) {
+    resolve('Operation successful!');
+  } else {
+    reject('Operation failed!');
+  }
+});
+
+// Consuming promises
+promise
+  .then(result => console.log(result))
+  .catch(error => console.error(error))
+  .finally(() => console.log('Done'));
+```
+
+2. Promise Chaining
+-------------------
+```javascript
+fetch('https://api.example.com/user')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+    return fetch(`https://api.example.com/posts/${data.id}`);
+  })
+  .then(response => response.json())
+  .then(posts => console.log(posts))
+  .catch(error => console.error('Error:', error));
+```
+
+3. Async/Await
+--------------
+Syntactic sugar over Promises, making asynchronous code look synchronous.
+
+```javascript
+async function fetchUser() {
+  try {
+    const response = await fetch('https://api.example.com/user');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+}
+
+// Calling async function
+fetchUser().then(user => console.log(user));
+```
+
+4. Multiple Promises
+--------------------
+```javascript
+// Promise.all - wait for all (fails if any fails)
+const [users, posts, comments] = await Promise.all([
+  fetch('/api/users').then(r => r.json()),
+  fetch('/api/posts').then(r => r.json()),
+  fetch('/api/comments').then(r => r.json())
+]);
+
+// Promise.race - first to complete wins
+const fastest = await Promise.race([
+  fetch('/api/server1'),
+  fetch('/api/server2')
+]);
+
+// Promise.allSettled - wait for all (doesn't fail)
+const results = await Promise.allSettled([
+  promise1,
+  promise2,
+  promise3
+]);
+```
+
+5. Error Handling
+-----------------
+```javascript
+async function getData() {
+  try {
+    const response = await fetch('/api/data');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    // Handle or re-throw
+    throw error;
+  }
+}
+```
+
+
+Modules (Import/Export)
+-----------------------
+
+1. Named Exports
+----------------
+```javascript
+// mathUtils.js
+export const PI = 3.14159;
+
+export function add(a, b) {
+  return a + b;
+}
+
+export function multiply(a, b) {
+  return a * b;
+}
+
+// Alternative syntax
+const subtract = (a, b) => a - b;
+const divide = (a, b) => a / b;
+
+export { subtract, divide };
+```
+
+Importing:
+```javascript
+// Import specific items
+import { add, multiply, PI } from './mathUtils.js';
+
+// Import with alias
+import { add as sum } from './mathUtils.js';
+
+// Import all as namespace
+import * as math from './mathUtils.js';
+math.add(2, 3);
+```
+
+2. Default Exports
+------------------
+```javascript
+// Button.js
+export default function Button() {
+  return <button>Click me</button>;
+}
+
+// Or
+function Button() {
+  return <button>Click me</button>;
+}
+export default Button;
+```
+
+Importing:
+```javascript
+// Can use any name
+import Button from './Button.js';
+import MyButton from './Button.js'; // Same thing
+```
+
+3. Mixed Exports
+----------------
+```javascript
+// utils.js
+export const version = '1.0.0';
+
+export function helper() {
+  // ...
+}
+
+export default function main() {
+  // ...
+}
+```
+
+Importing:
+```javascript
+import main, { version, helper } from './utils.js';
+```
+
+
+1.3 JSX BASICS
+--------------
+
+What is JSX?
+------------
+JSX (JavaScript XML) is a syntax extension for JavaScript that looks similar to HTML. It allows you to write HTML-like code in JavaScript files.
+
+Key points:
+- Not valid JavaScript - needs to be transpiled (Babel)
+- Combines markup with logic
+- Type-safe (with TypeScript)
+- Prevents injection attacks (auto-escapes)
+
+JSX Syntax and Rules
+--------------------
+
+1. Single Root Element
+----------------------
+JSX expressions must have ONE parent element.
+
+❌ Wrong:
+```jsx
+return (
+  <h1>Title</h1>
+  <p>Paragraph</p>
+);
+```
+
+✅ Correct:
+```jsx
+return (
+  <div>
+    <h1>Title</h1>
+    <p>Paragraph</p>
+  </div>
+);
+```
+
+2. Self-Closing Tags
+--------------------
+Tags without children must be self-closed.
+
+```jsx
+<img src="image.jpg" alt="Description" />
+<input type="text" />
+<br />
+<hr />
+```
+
+3. ClassName instead of class
+------------------------------
+Use `className` for CSS classes (class is reserved in JavaScript).
+
+```jsx
+<div className="container">
+  <h1 className="title">Heading</h1>
+</div>
+```
+
+4. camelCase for Attributes
+----------------------------
+HTML attributes become camelCase in JSX.
+
+```jsx
+<button onClick={handleClick}>Click</button>
+<label htmlFor="name">Name:</label>
+<div tabIndex={0}>Focusable</div>
+<input onChange={handleChange} />
+```
+
+5. Style as Object
+------------------
+Inline styles are objects with camelCase properties.
+
+```jsx
+const divStyle = {
+  backgroundColor: 'blue',
+  fontSize: '16px',
+  marginTop: '20px'
+};
+
+<div style={divStyle}>Styled div</div>
+
+// Or inline
+<div style={{ color: 'red', padding: '10px' }}>
+  Inline styled
+</div>
+```
+
+6. Comments in JSX
+------------------
+```jsx
+return (
+  <div>
+    {/* This is a comment */}
+    <h1>Title</h1>
+    {/* 
+      Multi-line
+      comment
+    */}
+  </div>
+);
+```
+
+
+Expressions in JSX
+------------------
+
+You can embed any JavaScript expression in JSX using curly braces {}.
+
+1. Variables
+------------
+```jsx
+const name = 'John';
+const age = 30;
+
+return (
+  <div>
+    <h1>Hello, {name}!</h1>
+    <p>You are {age} years old.</p>
+  </div>
+);
+```
+
+2. Expressions
+--------------
+```jsx
+const a = 5;
+const b = 10;
+
+return (
+  <div>
+    <p>Sum: {a + b}</p>
+    <p>Product: {a * b}</p>
+    <p>Message: {age >= 18 ? 'Adult' : 'Minor'}</p>
+  </div>
+);
+```
+
+3. Function Calls
+-----------------
+```jsx
+function formatName(user) {
+  return `${user.firstName} ${user.lastName}`;
+}
+
+const user = { firstName: 'John', lastName: 'Doe' };
+
+return <h1>Hello, {formatName(user)}!</h1>;
+```
+
+4. Object Properties
+--------------------
+```jsx
+const person = {
+  name: 'Alice',
+  age: 25,
+  city: 'NYC'
+};
+
+return (
+  <div>
+    <h1>{person.name}</h1>
+    <p>Age: {person.age}</p>
+    <p>City: {person.city}</p>
+  </div>
+);
+```
+
+5. Array Methods
+----------------
+```jsx
+const numbers = [1, 2, 3, 4, 5];
+
+return (
+  <div>
+    <p>Sum: {numbers.reduce((a, b) => a + b, 0)}</p>
+    <p>Count: {numbers.length}</p>
+  </div>
+);
+```
+
+
+JSX vs HTML Differences
+-----------------------
+
+1. Attribute Names
+------------------
+HTML          →  JSX
+class         →  className
+for           →  htmlFor
+tabindex      →  tabIndex
+onclick       →  onClick
+onchange      →  onChange
+maxlength     →  maxLength
+readonly      →  readOnly
+
+2. Boolean Attributes
+---------------------
+```jsx
+// HTML
+<input disabled>
+<input checked>
+
+// JSX
+<input disabled={true} />
+<input checked={isChecked} />
+
+// Shorthand (same as true)
+<input disabled />
+<input checked />
+```
+
+3. All Tags Must Close
+-----------------------
+```jsx
+// HTML (can be unclosed)
+<br>
+<img src="...">
+
+// JSX (must self-close)
+<br />
+<img src="..." />
+```
+
+4. Expressions Only
+-------------------
+JSX can contain expressions, not statements.
+
+❌ Cannot use:
+```jsx
+return (
+  <div>
+    {if (condition) { return <p>True</p> }}  // ❌ Statement
+    {for (let i = 0; i < 10; i++) { }}        // ❌ Statement
+  </div>
+);
+```
+
+✅ Use expressions:
+```jsx
+return (
+  <div>
+    {condition && <p>True</p>}  // ✅ Expression
+    {condition ? <p>True</p> : <p>False</p>}  // ✅ Expression
+    {items.map(item => <div key={item.id}>{item.name}</div>)}  // ✅ Expression
+  </div>
+);
+```
+
+
+Fragment Usage
+--------------
+
+Fragments let you group elements without adding extra DOM nodes.
+
+1. Fragment Syntax
+------------------
+```jsx
+import { Fragment } from 'react';
+
+return (
+  <Fragment>
+    <h1>Title</h1>
+    <p>Paragraph</p>
+  </Fragment>
+);
+```
+
+2. Short Syntax
+---------------
+```jsx
+return (
+  <>
+    <h1>Title</h1>
+    <p>Paragraph</p>
+  </>
+);
+```
+
+3. Fragment with Keys
+---------------------
+When mapping, use full Fragment syntax for keys:
+
+```jsx
+const items = [
+  { id: 1, term: 'React', desc: 'A library' },
+  { id: 2, term: 'JSX', desc: 'Syntax extension' }
+];
+
+return (
+  <dl>
+    {items.map(item => (
+      <Fragment key={item.id}>
+        <dt>{item.term}</dt>
+        <dd>{item.desc}</dd>
+      </Fragment>
+    ))}
+  </dl>
+);
+```
+
+4. When to Use Fragments
+-------------------------
+- Returning multiple elements from a component
+- Avoiding wrapper divs that break CSS layouts
+- Meeting HTML semantic requirements (e.g., <tr> must be child of <tbody>)
+
+
+1.4 COMPONENTS
+--------------
+
+What are Components?
+--------------------
+Components are independent, reusable pieces of UI. They accept inputs (props) and return React elements describing what should appear on screen.
+
+Think of components as JavaScript functions:
+- Accept inputs (props)
+- Return output (JSX)
+- Can be reused multiple times
+
+Benefits:
+- Reusability
+- Separation of concerns
+- Easier testing
+- Better organization
+
+
+Function Components
+-------------------
+
+Modern React uses function components (previously class components were common).
+
+1. Basic Component
+------------------
+```jsx
+function Welcome() {
+  return <h1>Hello, World!</h1>;
+}
+
+// Arrow function syntax
+const Welcome = () => {
+  return <h1>Hello, World!</h1>;
+};
+
+// Implicit return (single expression)
+const Welcome = () => <h1>Hello, World!</h1>;
+```
+
+2. Using Components
+-------------------
+```jsx
+function App() {
+  return (
+    <div>
+      <Welcome />
+      <Welcome />
+      <Welcome />
+    </div>
+  );
+}
+```
+
+3. Component Naming
+-------------------
+Rules:
+- Must start with capital letter (PascalCase)
+- Helps React distinguish components from HTML tags
+
+```jsx
+// ✅ Correct
+function UserProfile() { }
+function HomePage() { }
+const NavBar = () => { };
+
+// ❌ Wrong
+function userProfile() { }  // lowercase
+function home_page() { }    // snake_case
+```
+
+4. Component Files
+------------------
+Convention: One component per file, filename matches component name.
+
+```
+components/
+  ├── Button.jsx
+  ├── Header.jsx
+  └── UserProfile.jsx
+```
+
+Button.jsx:
+```jsx
+export default function Button() {
+  return <button>Click me</button>;
+}
+```
+
+Using:
+```jsx
+import Button from './components/Button';
+
+function App() {
+  return <Button />;
+}
+```
+
+
+Component Composition
+---------------------
+
+Building complex UIs by combining simpler components.
+
+Example:
+```jsx
+function Header() {
+  return (
+    <header>
+      <h1>My Website</h1>
+      <Navigation />
+    </header>
+  );
+}
+
+function Navigation() {
+  return (
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+    </nav>
+  );
+}
+
+function Main() {
+  return (
+    <main>
+      <Article />
+      <Sidebar />
+    </main>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      <Header />
+      <Main />
+      <Footer />
+    </div>
+  );
+}
+```
+
+
+Props (Properties)
+------------------
+
+Props are arguments passed to components, similar to function parameters.
+
+1. Basic Props
+--------------
+```jsx
+function Welcome(props) {
+  return <h1>Hello, {props.name}!</h1>;
+}
+
+// Usage
+<Welcome name="Alice" />
+<Welcome name="Bob" />
+```
+
+2. Destructuring Props
+-----------------------
+```jsx
+// Cleaner syntax
+function Welcome({ name }) {
+  return <h1>Hello, {name}!</h1>;
+}
+
+// Multiple props
+function UserCard({ name, age, email }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>Age: {age}</p>
+      <p>Email: {email}</p>
+    </div>
+  );
+}
+
+// Usage
+<UserCard 
+  name="John Doe"
+  age={30}
+  email="john@example.com"
+/>
+```
+
+3. Different Prop Types
+-----------------------
+```jsx
+function Demo({
+  text,        // string
+  count,       // number
+  isActive,    // boolean
+  user,        // object
+  items,       // array
+  onClick      // function
+}) {
+  return (
+    <div>
+      <p>{text}</p>
+      <p>Count: {count}</p>
+      <p>Active: {isActive ? 'Yes' : 'No'}</p>
+      <p>User: {user.name}</p>
+      <ul>
+        {items.map(item => <li key={item}>{item}</li>)}
+      </ul>
+      <button onClick={onClick}>Click</button>
+    </div>
+  );
+}
+
+// Usage
+<Demo
+  text="Hello"
+  count={42}
+  isActive={true}
+  user={{ name: 'John', age: 30 }}
+  items={['a', 'b', 'c']}
+  onClick={() => alert('Clicked!')}
+/>
+```
+
+4. Default Props
+----------------
+```jsx
+function Button({ text = 'Click me', type = 'button' }) {
+  return <button type={type}>{text}</button>;
+}
+
+// Usage
+<Button />                    // Uses defaults
+<Button text="Submit" />      // Custom text
+<Button type="submit" />      // Custom type
+```
+
+5. Props are Read-Only
+----------------------
+Never modify props directly!
+
+```jsx
+function Component({ count }) {
+  // ❌ NEVER do this
+  count = count + 1;
+  
+  // ✅ Use state instead (covered in Module 2)
+  return <div>{count}</div>;
+}
+```
+
+6. Spreading Props
+------------------
+```jsx
+const userProps = {
+  name: 'John',
+  age: 30,
+  email: 'john@example.com'
+};
+
+<UserCard {...userProps} />
+
+// Same as:
+<UserCard name="John" age={30} email="john@example.com" />
+```
+
+
+Children Prop
+-------------
+
+Special prop for passing content between component tags.
+
+1. Basic Children
+-----------------
+```jsx
+function Card({ children }) {
+  return (
+    <div className="card">
+      {children}
+    </div>
+  );
+}
+
+// Usage
+<Card>
+  <h2>Title</h2>
+  <p>This is the content</p>
+</Card>
+```
+
+2. Wrapper Components
+---------------------
+```jsx
+function Container({ children }) {
+  return (
+    <div className="container">
+      <div className="wrapper">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Container>
+      <h1>My App</h1>
+      <p>Welcome!</p>
+    </Container>
+  );
+}
+```
+
+3. Layout Components
+--------------------
+```jsx
+function Layout({ children }) {
+  return (
+    <>
+      <Header />
+      <main>{children}</main>
+      <Footer />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Layout>
+      <h1>Page Content</h1>
+      <p>This goes in the main area</p>
+    </Layout>
+  );
+}
+```
+
+
+Conditional Rendering
+---------------------
+
+Render different output based on conditions.
+
+1. If Statement (Outside JSX)
+-----------------------------
+```jsx
+function Greeting({ isLoggedIn }) {
+  if (isLoggedIn) {
+    return <h1>Welcome back!</h1>;
+  }
+  return <h1>Please sign in.</h1>;
+}
+```
+
+2. Ternary Operator
+-------------------
+```jsx
+function Greeting({ isLoggedIn }) {
+  return (
+    <div>
+      {isLoggedIn ? (
+        <h1>Welcome back!</h1>
+      ) : (
+        <h1>Please sign in.</h1>
+      )}
+    </div>
+  );
+}
+```
+
+3. Logical AND (&&)
+-------------------
+Render only if condition is true.
+
+```jsx
+function Mailbox({ unreadMessages }) {
+  return (
+    <div>
+      <h1>Hello!</h1>
+      {unreadMessages.length > 0 && (
+        <h2>You have {unreadMessages.length} unread messages.</h2>
+      )}
+    </div>
+  );
+}
+```
+
+4. Multiple Conditions
+----------------------
+```jsx
+function Status({ status }) {
+  return (
+    <div>
+      {status === 'loading' && <p>Loading...</p>}
+      {status === 'error' && <p>Error occurred!</p>}
+      {status === 'success' && <p>Success!</p>}
+    </div>
+  );
+}
+```
+
+5. Early Return Pattern
+-----------------------
+```jsx
+function UserProfile({ user }) {
+  if (!user) {
+    return <p>No user found</p>;
+  }
+  
+  if (!user.isActive) {
+    return <p>User is inactive</p>;
+  }
+  
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+6. Null Rendering
+-----------------
+Return null to render nothing.
+
+```jsx
+function Warning({ show }) {
+  if (!show) {
+    return null;
+  }
+  
+  return <p>Warning message!</p>;
+}
+```
+
+
+Lists and Keys
+--------------
+
+Rendering multiple components from arrays.
+
+1. Basic List Rendering
+-----------------------
+```jsx
+function NumberList() {
+  const numbers = [1, 2, 3, 4, 5];
+  
+  return (
+    <ul>
+      {numbers.map(number => (
+        <li key={number}>{number}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+2. Rendering Object Arrays
+---------------------------
+```jsx
+function UserList() {
+  const users = [
+    { id: 1, name: 'John', email: 'john@example.com' },
+    { id: 2, name: 'Jane', email: 'jane@example.com' },
+    { id: 3, name: 'Bob', email: 'bob@example.com' }
+  ];
+  
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>
+          {user.name} - {user.email}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+3. Keys Explained
+-----------------
+Keys help React identify which items changed, were added, or removed.
+
+Rules:
+- Keys must be unique among siblings
+- Use stable IDs (from data), not array indexes
+- Don't generate keys on the fly (Math.random(), Date.now())
+
+```jsx
+// ✅ Good: Using unique ID
+{users.map(user => (
+  <UserCard key={user.id} user={user} />
+))}
+
+// ⚠️  Acceptable only if items never reorder
+{items.map((item, index) => (
+  <div key={index}>{item}</div>
+))}
+
+// ❌ Bad: Generated key
+{items.map(item => (
+  <div key={Math.random()}>{item}</div>
+))}
+```
+
+4. Extracting List Components
+------------------------------
+```jsx
+function UserItem({ user }) {
+  return (
+    <li>
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+    </li>
+  );
+}
+
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <UserItem key={user.id} user={user} />
+      ))}
+    </ul>
+  );
+}
+```
+
+5. Filtering and Mapping
+-------------------------
+```jsx
+function ActiveUsers({ users }) {
+  const activeUsers = users.filter(user => user.active);
+  
+  return (
+    <ul>
+      {activeUsers.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// Or inline
+function ActiveUsers({ users }) {
+  return (
+    <ul>
+      {users
+        .filter(user => user.active)
+        .map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+    </ul>
+  );
+}
+```
+
+6. Conditional Items in Lists
+------------------------------
+```jsx
+function TodoList({ todos }) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          {todo.text}
+          {todo.completed && <span> ✓</span>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+
+PRACTICE EXERCISES
+------------------
+
+Exercise 1: Create a Profile Card Component
+-------------------------------------------
+Create a component that displays user information:
+- Name, age, location
+- Profile picture
+- Bio
+- Social media links
+
+Exercise 2: Build a Product List
+--------------------------------
+Create a product listing with:
+- Product name, price, image
+- Filter by category
+- Sort by price
+- Show/hide out of stock items
+
+Exercise 3: Navigation Menu
+---------------------------
+Build a navigation component with:
+- Multiple menu items from array
+- Active state highlighting
+- Mobile responsive (bonus)
+
+Exercise 4: Comment Section
+---------------------------
+Create a comment component displaying:
+- Author name and avatar
+- Comment text
+- Timestamp
+- Nested replies (bonus)
+
+Exercise 5: Weather Dashboard
+-----------------------------
+Build a weather display showing:
+- City name
+- Temperature
+- Weather condition (sunny, rainy, etc.)
+- Different icons based on condition
+
+
+COMMON MISTAKES & TIPS
+-----------------------
+
+Common Mistakes:
+1. Forgetting to capitalize component names
+2. Not closing JSX tags
+3. Trying to modify props
+4. Missing keys in lists
+5. Using index as key when order can change
+6. Forgetting to return JSX from component
+7. Using class instead of className
+
+Tips:
+1. Keep components small and focused
+2. Use descriptive component names
+3. Destructure props for cleaner code
+4. Extract reusable logic into separate components
+5. Use fragments to avoid unnecessary divs
+6. Always provide keys for list items
+7. Think in React: break UI into component hierarchy
+
+
+NEXT STEPS
+----------
+
+You've completed Module 1! You should now understand:
+✓ What React is and why to use it
+✓ JavaScript prerequisites (ES6+, arrays, promises, modules)
+✓ JSX syntax and rules
+✓ Creating and composing components
+✓ Working with props and children
+✓ Conditional rendering
+✓ Rendering lists with keys
+
+Next up: Module 2 - State and Events
+Learn how to make components interactive with state management and event handling.

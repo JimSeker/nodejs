@@ -1,0 +1,921 @@
+MODULE 6: STATE MANAGEMENT
+==========================
+
+6.1 STATE MANAGEMENT OVERVIEW
+-----------------------------
+
+When Do You Need State Management?
+----------------------------------
+
+Local State (useState):
+- Form inputs
+- UI toggles (modals, dropdowns)
+- Component-specific state
+- Temporary data
+
+Global/Remote State:
+- User authentication
+- User profile
+- Application settings
+- Theme preferences
+- API data (users, posts, etc.)
+- Real-time data
+
+
+State Management Solutions
+--------------------------
+
+1. Context API + useReducer
+   - Built-in, no dependencies
+   - Good for simple to medium apps
+   - Props drilling solution
+   - Can cause performance issues with large stores
+
+2. Redux Toolkit
+   - Industry standard
+   - Predictable, debuggable
+   - Large ecosystem
+   - Steeper learning curve
+   - Best for large apps
+
+3. Zustand
+   - Lightweight (~2KB)
+   - Simple API
+   - No provider needed
+   - Great for medium apps
+
+4. Jotai
+   - Atom-based state
+   - Primitive approach
+   - Good for complex apps
+   - React suspense support
+
+5. Recoil
+   - Experimental (by Meta)
+   - Atom-based
+   - Concurrent features support
+   - Still in development
+
+6. React Query / TanStack Query
+   - Server state management
+   - Caching
+   - Synchronization
+   - Not for client state
+
+Choosing the Right Solution:
+- Small app: Context API + useReducer
+- Medium app: Zustand or Context API
+- Large app: Redux Toolkit
+- Complex state: Jotai or Recoil
+- Server data: React Query
+
+
+6.2 CONTEXT + useReducer PATTERN
+---------------------------------
+
+Building a Global State Solution
+---------------------------------
+
+1. Create Store Context
+-----------------------
+```jsx
+import { createContext, useContext, useReducer } from 'react';
+
+const StoreContext = createContext();
+
+// Initial state
+const initialState = {
+  user: null,
+  theme: 'light',
+  notifications: [],
+  isLoading: false,
+  error: null
+};
+
+// Action types
+export const ACTIONS = {
+  SET_USER: 'SET_USER',
+  LOGOUT: 'LOGOUT',
+  SET_THEME: 'SET_THEME',
+  ADD_NOTIFICATION: 'ADD_NOTIFICATION',
+  REMOVE_NOTIFICATION: 'REMOVE_NOTIFICATION',
+  SET_LOADING: 'SET_LOADING',
+  SET_ERROR: 'SET_ERROR'
+};
+
+// Reducer function
+function storeReducer(state, action) {
+  switch (action.type) {
+    case ACTIONS.SET_USER:
+      return { ...state, user: action.payload };
+    
+    case ACTIONS.LOGOUT:
+      return { ...state, user: null };
+    
+    case ACTIONS.SET_THEME:
+      return { ...state, theme: action.payload };
+    
+    case ACTIONS.ADD_NOTIFICATION:
+      return {
+        ...state,
+        notifications: [...state.notifications, action.payload]
+      };
+    
+    case ACTIONS.REMOVE_NOTIFICATION:
+      return {
+        ...state,
+        notifications: state.notifications.filter(
+          n => n.id !== action.payload
+        )
+      };
+    
+    case ACTIONS.SET_LOADING:
+      return { ...state, isLoading: action.payload };
+    
+    case ACTIONS.SET_ERROR:
+      return { ...state, error: action.payload };
+    
+    default:
+      return state;
+  }
+}
+
+// Provider component
+export function StoreProvider({ children }) {
+  const [state, dispatch] = useReducer(storeReducer, initialState);
+  
+  const value = { state, dispatch };
+  
+  return (
+    <StoreContext.Provider value={value}>
+      {children}
+    </StoreContext.Provider>
+  );
+}
+
+// Custom hook
+export function useStore() {
+  const context = useContext(StoreContext);
+  
+  if (!context) {
+    throw new Error('useStore must be used within StoreProvider');
+  }
+  
+  return context;
+}
+```
+
+2. Using the Store
+------------------
+```jsx
+import { useStore, ACTIONS } from './StoreContext';
+
+function UserProfile() {
+  const { state, dispatch } = useStore();
+  const { user, isLoading, error } = state;
+  
+  const handleLogout = () => {
+    dispatch({ type: ACTIONS.LOGOUT });
+  };
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  
+  if (!user) {
+    return <div>Not logged in</div>;
+  }
+  
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+      <button onClick={handleLogout}>Logout</button>
+    </div>
+  );
+}
+```
+
+3. Async Actions
+----------------
+```jsx
+// Thunk-like pattern
+export function useStoreActions() {
+  const { dispatch } = useStore();
+  
+  const login = async (email, password) => {
+    dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+    dispatch({ type: ACTIONS.SET_ERROR, payload: null });
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      
+      const data = await response.json();
+      
+      dispatch({ type: ACTIONS.SET_USER, payload: data.user });
+      localStorage.setItem('token', data.token);
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+    }
+  };
+  
+  const logout = () => {
+    dispatch({ type: ACTIONS.LOGOUT });
+    localStorage.removeItem('token');
+  };
+  
+  const toggleTheme = () => {
+    const { state } = useStore();
+    const newTheme = state.theme === 'light' ? 'dark' : 'light';
+    dispatch({ type: ACTIONS.SET_THEME, payload: newTheme });
+  };
+  
+  return { login, logout, toggleTheme };
+}
+
+// Usage
+function LoginForm() {
+  const { login } = useStoreActions();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await login(email, password);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" />
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+4. Selecting State (Performance Optimization)
+----------------------------------------------
+```jsx
+// Create selector hooks to prevent unnecessary re-renders
+export function useUser() {
+  const { state } = useStore();
+  return state.user;
+}
+
+export function useTheme() {
+  const { state } = useStore();
+  return state.theme;
+}
+
+export function useNotifications() {
+  const { state } = useStore();
+  return state.notifications;
+}
+
+export function useIsLoading() {
+  const { state } = useStore();
+  return state.isLoading;
+}
+
+// Usage
+function MyComponent() {
+  const user = useUser();  // Only re-renders when user changes
+  const theme = useTheme();  // Only re-renders when theme changes
+  
+  return <div>{user.name}</div>;
+}
+```
+
+
+Complete Context + useReducer Example
+-------------------------------------
+
+```jsx
+// storeContext.js
+import { createContext, useContext, useReducer, useEffect } from 'react';
+
+const StoreContext = createContext();
+
+const initialState = {
+  todos: [],
+  filter: 'all',
+  isLoading: false,
+  error: null
+};
+
+export const ACTIONS = {
+  SET_TODOS: 'SET_TODOS',
+  ADD_TODO: 'ADD_TODO',
+  UPDATE_TODO: 'UPDATE_TODO',
+  DELETE_TODO: 'DELETE_TODO',
+  SET_FILTER: 'SET_FILTER',
+  SET_LOADING: 'SET_LOADING',
+  SET_ERROR: 'SET_ERROR'
+};
+
+function todoReducer(state, action) {
+  switch (action.type) {
+    case ACTIONS.SET_TODOS:
+      return { ...state, todos: action.payload };
+    
+    case ACTIONS.ADD_TODO:
+      return { ...state, todos: [...state.todos, action.payload] };
+    
+    case ACTIONS.UPDATE_TODO:
+      return {
+        ...state,
+        todos: state.todos.map(todo =>
+          todo.id === action.payload.id ? action.payload : todo
+        )
+      };
+    
+    case ACTIONS.DELETE_TODO:
+      return {
+        ...state,
+        todos: state.todos.filter(todo => todo.id !== action.payload)
+      };
+    
+    case ACTIONS.SET_FILTER:
+      return { ...state, filter: action.payload };
+    
+    case ACTIONS.SET_LOADING:
+      return { ...state, isLoading: action.payload };
+    
+    case ACTIONS.SET_ERROR:
+      return { ...state, error: action.payload };
+    
+    default:
+      return state;
+  }
+}
+
+export function StoreProvider({ children }) {
+  const [state, dispatch] = useReducer(todoReducer, initialState);
+  
+  // Load todos on mount
+  useEffect(() => {
+    dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+    
+    fetch('/api/todos')
+      .then(res => res.json())
+      .then(todos => {
+        dispatch({ type: ACTIONS.SET_TODOS, payload: todos });
+      })
+      .catch(error => {
+        dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      })
+      .finally(() => {
+        dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+      });
+  }, []);
+  
+  return (
+    <StoreContext.Provider value={{ state, dispatch }}>
+      {children}
+    </StoreContext.Provider>
+  );
+}
+
+export function useStore() {
+  const context = useContext(StoreContext);
+  if (!context) {
+    throw new Error('useStore must be used within StoreProvider');
+  }
+  return context;
+}
+
+// Custom hooks for actions
+export function useTodoActions() {
+  const { dispatch } = useStore();
+  
+  const addTodo = async (text) => {
+    const response = await fetch('/api/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, completed: false })
+    });
+    
+    const todo = await response.json();
+    dispatch({ type: ACTIONS.ADD_TODO, payload: todo });
+  };
+  
+  const updateTodo = async (id, updates) => {
+    const response = await fetch(`/api/todos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    
+    const todo = await response.json();
+    dispatch({ type: ACTIONS.UPDATE_TODO, payload: todo });
+  };
+  
+  const deleteTodo = async (id) => {
+    await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+    dispatch({ type: ACTIONS.DELETE_TODO, payload: id });
+  };
+  
+  const setFilter = (filter) => {
+    dispatch({ type: ACTIONS.SET_FILTER, payload: filter });
+  };
+  
+  return { addTodo, updateTodo, deleteTodo, setFilter };
+}
+
+// Usage in component
+function TodoApp() {
+  const { state } = useStore();
+  const { addTodo, updateTodo, deleteTodo, setFilter } = useTodoActions();
+  const [input, setInput] = useState('');
+  
+  const filteredTodos = state.todos.filter(todo => {
+    if (state.filter === 'completed') return todo.completed;
+    if (state.filter === 'active') return !todo.completed;
+    return true;
+  });
+  
+  const handleAddTodo = async (e) => {
+    e.preventDefault();
+    if (input.trim()) {
+      await addTodo(input);
+      setInput('');
+    }
+  };
+  
+  if (state.isLoading) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      <form onSubmit={handleAddTodo}>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Add todo"
+        />
+        <button type="submit">Add</button>
+      </form>
+      
+      <div>
+        <button onClick={() => setFilter('all')}>All</button>
+        <button onClick={() => setFilter('active')}>Active</button>
+        <button onClick={() => setFilter('completed')}>Completed</button>
+      </div>
+      
+      <ul>
+        {filteredTodos.map(todo => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={(e) =>
+                updateTodo(todo.id, { completed: e.target.checked })
+              }
+            />
+            <span style={{
+              textDecoration: todo.completed ? 'line-through' : 'none'
+            }}>
+              {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+
+6.3 REDUX TOOLKIT BASICS
+------------------------
+
+What is Redux Toolkit?
+----------------------
+Redux Toolkit is the official, opinionated way to write Redux logic. It simplifies Redux development.
+
+Key Features:
+- Redux core
+- Immer (immutable updates)
+- Redux Thunk (async actions)
+- Reselect (memoized selectors)
+- Redux DevTools integration
+
+Installation:
+```bash
+npm install @reduxjs/toolkit react-redux
+```
+
+
+Setting Up Redux
+----------------
+
+1. Create Slices
+----------------
+```jsx
+import { createSlice } from '@reduxjs/toolkit';
+
+const todoSlice = createSlice({
+  name: 'todos',
+  initialState: {
+    items: [],
+    isLoading: false,
+    error: null
+  },
+  reducers: {
+    addTodo: (state, action) => {
+      state.items.push({
+        id: Date.now(),
+        text: action.payload,
+        completed: false
+      });
+    },
+    toggleTodo: (state, action) => {
+      const todo = state.items.find(t => t.id === action.payload);
+      if (todo) {
+        todo.completed = !todo.completed;
+      }
+    },
+    deleteTodo: (state, action) => {
+      state.items = state.items.filter(t => t.id !== action.payload);
+    },
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    }
+  }
+});
+
+export const { addTodo, toggleTodo, deleteTodo, setLoading, setError } = todoSlice.actions;
+export default todoSlice.reducer;
+```
+
+2. Create Store
+---------------
+```jsx
+import { configureStore } from '@reduxjs/toolkit';
+import todoReducer from './todoSlice';
+import userReducer from './userSlice';
+
+const store = configureStore({
+  reducer: {
+    todos: todoReducer,
+    user: userReducer
+  }
+});
+
+export default store;
+```
+
+3. Provide Store
+----------------
+```jsx
+import { Provider } from 'react-redux';
+import store from './store';
+import App from './App';
+
+function Root() {
+  return (
+    <Provider store={store}>
+      <App />
+    </Provider>
+  );
+}
+```
+
+4. Use in Components
+--------------------
+```jsx
+import { useDispatch, useSelector } from 'react-redux';
+import { addTodo, toggleTodo, deleteTodo } from './todoSlice';
+
+function TodoApp() {
+  const dispatch = useDispatch();
+  const todos = useSelector(state => state.todos.items);
+  const isLoading = useSelector(state => state.todos.isLoading);
+  const [input, setInput] = useState('');
+  
+  const handleAddTodo = () => {
+    if (input.trim()) {
+      dispatch(addTodo(input));
+      setInput('');
+    }
+  };
+  
+  return (
+    <div>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button onClick={handleAddTodo}>Add</button>
+      
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => dispatch(toggleTodo(todo.id))}
+            />
+            <span>{todo.text}</span>
+            <button onClick={() => dispatch(deleteTodo(todo.id))}>
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+
+Async Operations with createAsyncThunk
+--------------------------------------
+
+```jsx
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+// Async thunk
+export const fetchTodos = createAsyncThunk(
+  'todos/fetchTodos',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/todos');
+      if (!response.ok) {
+        throw new Error('Failed to fetch');
+      }
+      return await response.json();
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const todoSlice = createSlice({
+  name: 'todos',
+  initialState: {
+    items: [],
+    isLoading: false,
+    error: null
+  },
+  reducers: {
+    addTodo: (state, action) => {
+      state.items.push(action.payload);
+    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTodos.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchTodos.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchTodos.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
+  }
+});
+
+// Usage
+function TodoApp() {
+  const dispatch = useDispatch();
+  const { items, isLoading, error } = useSelector(state => state.todos);
+  
+  useEffect(() => {
+    dispatch(fetchTodos());
+  }, [dispatch]);
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  
+  return (
+    <ul>
+      {items.map(todo => (
+        <li key={todo.id}>{todo.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+
+Selectors and Memoization
+--------------------------
+
+```jsx
+import { createSelector } from '@reduxjs/toolkit';
+
+// Basic selector
+const selectTodos = (state) => state.todos.items;
+const selectFilter = (state) => state.todos.filter;
+
+// Memoized selector
+export const selectFilteredTodos = createSelector(
+  [selectTodos, selectFilter],
+  (todos, filter) => {
+    if (filter === 'completed') {
+      return todos.filter(todo => todo.completed);
+    }
+    if (filter === 'active') {
+      return todos.filter(todo => !todo.completed);
+    }
+    return todos;
+  }
+);
+
+// Usage
+function TodoList() {
+  const filteredTodos = useSelector(selectFilteredTodos);
+  
+  return (
+    <ul>
+      {filteredTodos.map(todo => (
+        <li key={todo.id}>{todo.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+
+PRACTICE EXERCISES
+------------------
+
+Exercise 1: Todo App with Context + useReducer
+----------------------------------------------
+Create a todo app with:
+- Add/update/delete todos
+- Filter todos
+- Persist to localStorage
+- Custom hooks for actions
+- Proper state management
+
+Exercise 2: User Authentication with Redux
+-------------------------------------------
+Build auth system with:
+- Login/logout
+- User profile
+- Protected pages
+- Token management
+- Async thunks
+
+Exercise 3: Shopping Cart
+-------------------------
+Implement cart with:
+- Add/remove items
+- Update quantities
+- Calculate totals
+- Persist cart
+- Redux state management
+
+Exercise 4: Real-time Chat with Context
+----------------------------------------
+Create chat app with:
+- Message list
+- Add messages
+- User list
+- Notifications
+- Global state management
+
+Exercise 5: Analytics Dashboard
+-------------------------------
+Build dashboard with:
+- Complex state structure
+- Multiple data sources
+- Filters and sorting
+- Performance optimization
+- Proper selectors
+
+
+STATE MANAGEMENT COMPARISON
+---------------------------
+
+Context API + useReducer:
+✓ Built-in, no dependencies
+✓ Good for learning
+✓ Sufficient for small to medium apps
+✗ Can be verbose
+✗ Performance issues with large stores
+✗ Boilerplate code
+
+Redux Toolkit:
+✓ Industry standard
+✓ Excellent DevTools
+✓ Predictable state flow
+✓ Large ecosystem
+✓ Middleware support
+✗ More boilerplate
+✗ Steeper learning curve
+✗ More complex for simple apps
+
+Zustand:
+✓ Lightweight
+✓ Simple API
+✓ No provider boilerplate
+✓ Good performance
+✓ TypeScript friendly
+✗ Smaller ecosystem
+✗ Less debugging tools
+✗ Newer library
+
+React Query:
+✓ Excellent for server state
+✓ Built-in caching
+✓ Synchronization
+✗ Not for client state
+✗ Additional dependency
+
+
+BEST PRACTICES
+--------------
+
+1. Keep State Normalized
+   - Avoid deeply nested state
+   - Use IDs for relationships
+   - Make selectors efficient
+
+2. Separate Concerns
+   - Server state (React Query)
+   - Client state (Context/Redux)
+   - UI state (useState)
+
+3. Use Selectors
+   - Memoize selectors
+   - Prevent unnecessary re-renders
+   - Decouple components
+
+4. Handle Async Properly
+   - Use middleware (Redux Thunk)
+   - Handle loading/error states
+   - Cancel requests on unmount
+
+5. Performance Optimization
+   - Use Redux DevTools
+   - Monitor re-renders
+   - Optimize selectors
+   - Lazy load reducers
+
+6. Testing
+   - Test reducers/slices
+   - Test selectors
+   - Mock API calls
+   - Test actions
+
+
+COMMON MISTAKES & TIPS
+-----------------------
+
+Common Mistakes:
+1. Mutating state directly
+2. Too much state in Redux
+3. Not normalizing state
+4. Inefficient selectors
+5. Not handling loading/error states
+6. Tightly coupling components to store
+7. Over-engineering simple apps
+
+Tips:
+1. Use Redux for complex apps
+2. Use Context for simple global state
+3. Use React Query for server state
+4. Keep state as normalized as possible
+5. Use Redux DevTools browser extension
+6. Write testable reducers
+7. Measure performance before optimizing
+8. Use proper TypeScript types
+9. Document your state structure
+10. Review state shape regularly
+
+
+NEXT STEPS
+----------
+
+You've completed Module 6! You should now understand:
+✓ When to use state management
+✓ Comparing state management solutions
+✓ Context API + useReducer pattern
+✓ Redux Toolkit basics
+✓ Async operations with thunks
+✓ Selectors and memoization
+✓ Performance optimization
+✓ Testing state management
+
+Next up: Module 7 - Forms and Validation
+Learn how to build robust forms with validation and error handling.

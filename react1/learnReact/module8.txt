@@ -1,0 +1,892 @@
+MODULE 8: DATA FETCHING
+=======================
+
+8.1 HTTP REQUESTS
+-----------------
+
+Fetch API Basics
+----------------
+
+The Fetch API is the modern way to make HTTP requests in JavaScript.
+
+1. Basic GET Request
+--------------------
+```jsx
+import { useState, useEffect } from 'react';
+
+function UserProfile() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    fetch('https://api.example.com/user')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        setError(error.message);
+        setLoading(false);
+      });
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!user) return <div>No user found</div>;
+  
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+2. POST Request
+---------------
+```jsx
+function CreateUser() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: ''
+  });
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('https://api.example.com/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer token123'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+      
+      const result = await response.json();
+      console.log('User created:', result);
+      setFormData({ name: '', email: '' });
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        placeholder="Name"
+      />
+      <input
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        type="email"
+        placeholder="Email"
+      />
+      <button type="submit" disabled={loading}>
+        {loading ? 'Creating...' : 'Create User'}
+      </button>
+      {error && <p>{error}</p>}
+    </form>
+  );
+}
+```
+
+3. PUT Request
+--------------
+```jsx
+function UpdateUser({ userId, initialData }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState(initialData);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`https://api.example.com/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update user');
+      }
+      
+      const result = await response.json();
+      console.log('User updated:', result);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return <form onSubmit={handleSubmit}>{/* Form fields */}</form>;
+}
+```
+
+4. DELETE Request
+-----------------
+```jsx
+function DeleteUser({ userId, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure?')) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`https://api.example.com/users/${userId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+      
+      onSuccess();
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div>
+      <button onClick={handleDelete} disabled={loading}>
+        {loading ? 'Deleting...' : 'Delete User'}
+      </button>
+      {error && <p>{error}</p>}
+    </div>
+  );
+}
+```
+
+
+Using Axios
+-----------
+
+Axios is a promise-based HTTP client with better API than Fetch.
+
+Installation:
+```bash
+npm install axios
+```
+
+1. Axios Instance
+-----------------
+```jsx
+import axios from 'axios';
+
+const API = axios.create({
+  baseURL: 'https://api.example.com',
+  timeout: 5000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add authorization header
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle errors globally
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default API;
+```
+
+2. GET with Axios
+-----------------
+```jsx
+import API from './api';
+
+function UserProfile() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    API.get('/user')
+      .then(response => setUser(response.data))
+      .catch(error => setError(error.message))
+      .finally(() => setLoading(false));
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  
+  return <div>{user.name}</div>;
+}
+```
+
+3. POST with Axios
+------------------
+```jsx
+async function createUser(userData) {
+  try {
+    const response = await API.post('/users', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating user:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Usage
+function CreateUserForm() {
+  const [loading, setLoading] = useState(false);
+  
+  const handleSubmit = async (formData) => {
+    setLoading(true);
+    try {
+      const newUser = await createUser(formData);
+      console.log('User created:', newUser);
+    } catch (error) {
+      // Error handled
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return <form onSubmit={(e) => handleSubmit(e)}>{/* Form */}</form>;
+}
+```
+
+
+Error Handling
+--------------
+
+1. Network Errors
+-----------------
+```jsx
+function fetchData(url) {
+  return fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
+    .catch(error => {
+      if (error instanceof TypeError) {
+        // Network error
+        console.error('Network error:', error.message);
+      } else {
+        // Other error
+        console.error('Error:', error.message);
+      }
+      throw error;
+    });
+}
+```
+
+2. Handling Different Status Codes
+-----------------------------------
+```jsx
+async function fetchWithErrorHandling(url) {
+  try {
+    const response = await fetch(url);
+    
+    if (response.status === 404) {
+      throw new Error('Resource not found');
+    } else if (response.status === 401) {
+      // Handle unauthorized
+      redirectToLogin();
+    } else if (response.status === 403) {
+      throw new Error('Access denied');
+    } else if (response.status >= 500) {
+      throw new Error('Server error. Please try again later.');
+    } else if (!response.ok) {
+      throw new Error('Request failed');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
+}
+```
+
+3. Retry Logic
+--------------
+```jsx
+async function fetchWithRetry(url, options = {}, retries = 3) {
+  const { delay = 1000, ...fetchOptions } = options;
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, fetchOptions);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      if (attempt === retries) {
+        throw error;
+      }
+      
+      console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+    }
+  }
+}
+
+// Usage
+useEffect(() => {
+  fetchWithRetry('/api/data', {}, 3)
+    .then(data => setData(data))
+    .catch(error => setError(error.message));
+}, []);
+```
+
+
+8.2 ADVANCED DATA FETCHING
+--------------------------
+
+React Query / TanStack Query
+-----------------------------
+
+React Query is a powerful library for server state management.
+
+Installation:
+```bash
+npm install @tanstack/react-query
+```
+
+1. Setup QueryClient
+--------------------
+```jsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import App from './App';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 10, // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: true
+    }
+  }
+});
+
+function Root() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  );
+}
+
+export default Root;
+```
+
+2. useQuery Hook
+----------------
+```jsx
+import { useQuery } from '@tanstack/react-query';
+
+function UserProfile({ userId }) {
+  const { data: user, isLoading, error, refetch } = useQuery({
+    queryKey: ['user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch user');
+      return response.json();
+    },
+    enabled: !!userId // Only run if userId exists
+  });
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return (
+    <div>
+      <h2>{user?.name}</h2>
+      <button onClick={() => refetch()}>Refresh</button>
+    </div>
+  );
+}
+```
+
+3. useMutation Hook
+-------------------
+```jsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+function CreateUserForm() {
+  const queryClient = useQueryClient();
+  
+  const mutation = useMutation({
+    mutationFn: async (userData) => {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (!response.ok) throw new Error('Failed to create user');
+      return response.json();
+    },
+    onSuccess: (newUser) => {
+      // Invalidate query to refetch users
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      // Or update cache directly
+      queryClient.setQueryData(['users'], (old) => [...old, newUser]);
+    },
+    onError: (error) => {
+      console.error('Error:', error.message);
+    }
+  });
+  
+  const handleSubmit = (formData) => {
+    mutation.mutate(formData);
+  };
+  
+  return (
+    <form onSubmit={(e) => {
+      e.preventDefault();
+      handleSubmit({ /* form data */ });
+    }}>
+      {/* Form fields */}
+      <button disabled={mutation.isPending}>
+        {mutation.isPending ? 'Creating...' : 'Create'}
+      </button>
+      {mutation.error && <p>{mutation.error.message}</p>}
+    </form>
+  );
+}
+```
+
+4. Parallel Queries
+-------------------
+```jsx
+function Dashboard({ userId }) {
+  const userQuery = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => fetch(`/api/users/${userId}`).then(r => r.json())
+  });
+  
+  const postsQuery = useQuery({
+    queryKey: ['user', userId, 'posts'],
+    queryFn: () => fetch(`/api/users/${userId}/posts`).then(r => r.json()),
+    enabled: !!userId
+  });
+  
+  const commentsQuery = useQuery({
+    queryKey: ['comments'],
+    queryFn: () => fetch('/api/comments').then(r => r.json())
+  });
+  
+  if (userQuery.isLoading || postsQuery.isLoading) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      <h1>{userQuery.data?.name}</h1>
+      <p>Posts: {postsQuery.data?.length}</p>
+      <p>Comments: {commentsQuery.data?.length}</p>
+    </div>
+  );
+}
+```
+
+5. Dependent Queries
+--------------------
+```jsx
+function UserWithPosts({ userId }) {
+  // First query
+  const userQuery = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => fetch(`/api/users/${userId}`).then(r => r.json())
+  });
+  
+  // Second query depends on first
+  const postsQuery = useQuery({
+    queryKey: ['posts', userQuery.data?.id],
+    queryFn: () => fetch(`/api/users/${userQuery.data.id}/posts`).then(r => r.json()),
+    enabled: !!userQuery.data?.id // Only run if user loaded
+  });
+  
+  if (userQuery.isLoading) return <div>Loading user...</div>;
+  if (postsQuery.isLoading) return <div>Loading posts...</div>;
+  
+  return (
+    <div>
+      <h1>{userQuery.data.name}</h1>
+      <ul>
+        {postsQuery.data?.map(post => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+6. Pagination
+--------------
+```jsx
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+
+function UserList() {
+  const [page, setPage] = useState(1);
+  
+  const { data, isLoading, error, isPreviousData } = useQuery({
+    queryKey: ['users', page],
+    queryFn: () =>
+      fetch(`/api/users?page=${page}`).then(r => r.json()),
+    keepPreviousData: true // Show old data while loading new
+  });
+  
+  return (
+    <div>
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        <ul>
+          {data?.users.map(user => (
+            <li key={user.id}>{user.name}</li>
+          ))}
+        </ul>
+      )}
+      
+      <button
+        onClick={() => setPage(p => p - 1)}
+        disabled={page === 1}
+      >
+        Previous
+      </button>
+      <span>Page {page}</span>
+      <button
+        onClick={() => setPage(p => p + 1)}
+        disabled={!data?.hasMore}
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+```
+
+7. Infinite Queries
+-------------------
+```jsx
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+
+function InfiniteUserList() {
+  const { data, error, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ['users'],
+    queryFn: ({ pageParam = 1 }) =>
+      fetch(`/api/users?page=${pageParam}`).then(r => r.json()),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.length + 1 : undefined
+  });
+  
+  const observerTarget = useRef(null);
+  
+  // Auto-load next page when near bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && hasNextPage && !isLoading) {
+        fetchNextPage();
+      }
+    });
+    
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [hasNextPage, isLoading, fetchNextPage]);
+  
+  return (
+    <div>
+      {data?.pages.map(page =>
+        page.users.map(user => (
+          <div key={user.id}>{user.name}</div>
+        ))
+      )}
+      <div ref={observerTarget}>
+        {isLoading && <div>Loading more...</div>}
+      </div>
+    </div>
+  );
+}
+```
+
+
+Optimistic Updates
+------------------
+
+Update UI before server confirms:
+
+```jsx
+function UpdateUserForm({ user }) {
+  const queryClient = useQueryClient();
+  
+  const mutation = useMutation({
+    mutationFn: (updates) =>
+      fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      }).then(r => r.json()),
+    
+    onMutate: async (updates) => {
+      // Cancel pending queries
+      await queryClient.cancelQueries({ queryKey: ['user', user.id] });
+      
+      // Snapshot old data
+      const previousUser = queryClient.getQueryData(['user', user.id]);
+      
+      // Update cache optimistically
+      queryClient.setQueryData(['user', user.id], (old) => ({
+        ...old,
+        ...updates
+      }));
+      
+      return { previousUser };
+    },
+    
+    onError: (error, updates, context) => {
+      // Revert on error
+      queryClient.setQueryData(['user', user.id], context.previousUser);
+    },
+    
+    onSuccess: () => {
+      // Refetch to confirm
+      queryClient.invalidateQueries({ queryKey: ['user', user.id] });
+    }
+  });
+  
+  const handleUpdate = (updates) => {
+    mutation.mutate(updates);
+  };
+  
+  return (
+    <div>
+      <button onClick={() => handleUpdate({ name: 'New Name' })}>
+        Update Name
+      </button>
+    </div>
+  );
+}
+```
+
+
+Caching Strategies
+------------------
+
+1. Stale-While-Revalidate
+------------------------
+```jsx
+const query = useQuery({
+  queryKey: ['user'],
+  queryFn: fetchUser,
+  staleTime: 1000 * 60 * 5, // Data fresh for 5 minutes
+  gcTime: 1000 * 60 * 10 // Cache for 10 minutes
+});
+```
+
+2. Cache Invalidation
+---------------------
+```jsx
+const queryClient = useQueryClient();
+
+// Invalidate all queries
+queryClient.invalidateQueries();
+
+// Invalidate specific query
+queryClient.invalidateQueries({ queryKey: ['user', userId] });
+
+// Invalidate by prefix
+queryClient.invalidateQueries({
+  queryKey: ['user'],
+  exact: false
+});
+```
+
+3. Background Refetching
+------------------------
+```jsx
+const query = useQuery({
+  queryKey: ['user'],
+  queryFn: fetchUser,
+  refetchInterval: 1000 * 60, // Refetch every minute
+  refetchIntervalInBackground: true // Even if not focused
+});
+```
+
+
+Building a Custom Hook
+----------------------
+
+```jsx
+export function useFetch(url, options = {}) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: [url],
+    queryFn: async () => {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+    staleTime: options.staleTime || 1000 * 60 * 5,
+    gcTime: options.gcTime || 1000 * 60 * 10,
+    enabled: options.enabled !== false,
+    retry: options.retry !== false ? 1 : false
+  });
+  
+  return { data, isLoading, error, refetch };
+}
+
+// Usage
+function UserProfile({ userId }) {
+  const { data: user, isLoading, error } = useFetch(`/api/users/${userId}`);
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return <div>{user?.name}</div>;
+}
+```
+
+
+PRACTICE EXERCISES
+------------------
+
+Exercise 1: Weather App
+-----------------------
+Create an app that:
+- Fetches weather data from API
+- Shows current weather
+- Shows forecast
+- Handles errors gracefully
+- Caches data appropriately
+
+Exercise 2: GitHub User Search
+------------------------------
+Build a search that:
+- Searches GitHub users by name
+- Shows user details
+- Shows repositories
+- Handles loading/error states
+- Caches results
+
+Exercise 3: Paginated Product List
+-----------------------------------
+Implement pagination with:
+- Fetch products per page
+- Previous/Next navigation
+- Keep previous data while loading
+- Sort and filter
+- Cache management
+
+Exercise 4: Infinite Scrolling Feed
+-----------------------------------
+Create a feed with:
+- Infinite scroll loading
+- Intersection Observer
+- Load more on scroll
+- Error handling
+- Proper caching
+
+Exercise 5: Real-time Data Dashboard
+------------------------------------
+Build dashboard with:
+- Parallel queries
+- Auto-refetch data
+- Multiple data sources
+- Optimistic updates
+- Proper error handling
+
+
+COMMON MISTAKES & TIPS
+-----------------------
+
+Common Mistakes:
+1. Not handling errors properly
+2. Not showing loading states
+3. Fetching on every render
+4. Not canceling requests on unmount
+5. Inefficient caching
+6. Not using React Query/TanStack Query
+7. Poor error messages
+
+Tips:
+1. Always handle loading, error, and success states
+2. Use React Query for server state
+3. Implement proper error handling
+4. Show loading indicators
+5. Use AbortController for cancellation
+6. Leverage caching effectively
+7. Use optimistic updates for better UX
+8. Separate server and client state
+9. Test API interactions
+10. Monitor network performance
+
+
+NEXT STEPS
+----------
+
+You've completed Module 8! You should now understand:
+✓ Fetch API basics (GET, POST, PUT, DELETE)
+✓ Using Axios as HTTP client
+✓ Error handling strategies
+✓ React Query/TanStack Query setup
+✓ useQuery and useMutation hooks
+✓ Parallel and dependent queries
+✓ Pagination and infinite scrolling
+✓ Optimistic updates
+✓ Caching strategies
+✓ Custom data fetching hooks
+
+Next up: Module 9 - Styling in React
+Learn how to style components effectively using various CSS approaches.

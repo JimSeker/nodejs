@@ -1,0 +1,310 @@
+MODULE 14: MODERN REACT PATTERNS
+=================================
+
+14.1 CONCURRENT FEATURES (REACT 18+)
+-------------------------------------
+
+Key Ideas
+---------
+- Concurrent rendering improves responsiveness by interruptible renders.
+- `startTransition` / `useTransition` mark updates as non-urgent.
+- `useDeferredValue` defers expensive derived UI from high-priority inputs.
+- `Suspense` coordinates loading states for async boundaries.
+
+Transitions
+-----------
+```jsx
+import { useState, useTransition } from 'react';
+
+export function FilteredList({ items }) {
+  const [query, setQuery] = useState('');
+  const [list, setList] = useState(items);
+  const [isPending, startTransition] = useTransition();
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value); // urgent update
+    startTransition(() => {
+      const filtered = items.filter((item) => item.includes(value));
+      setList(filtered); // non-urgent
+    });
+  };
+
+  return (
+    <div>
+      <input value={query} onChange={handleChange} placeholder="Search" />
+      {isPending && <p>Updating…</p>}
+      <ul>{list.map((i) => <li key={i}>{i}</li>)}</ul>
+    </div>
+  );
+}
+```
+
+Deferred Value
+--------------
+```jsx
+import { useDeferredValue, useMemo } from 'react';
+
+function SearchResults({ query, items }) {
+  const deferredQuery = useDeferredValue(query);
+  const filtered = useMemo(
+    () => items.filter((item) => item.includes(deferredQuery)),
+    [items, deferredQuery]
+  );
+  return <div>{filtered.length} results</div>;
+}
+```
+
+
+14.2 SUSPENSE FOR DATA & LAZY
+-----------------------------
+
+Lazy Components
+---------------
+```jsx
+import { lazy, Suspense } from 'react';
+const Chart = lazy(() => import('./Chart'));
+
+export function Dashboard() {
+  return (
+    <Suspense fallback={<p>Loading chart…</p>}>
+      <Chart />
+    </Suspense>
+  );
+}
+```
+
+Suspense + Data (libraries)
+---------------------------
+- React Query: `suspense: true` option (use with error boundaries).
+- Relay/Next.js App Router use built-in Suspense integration.
+
+Error Boundaries
+----------------
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, info) { console.error(error, info); }
+  render() {
+    if (this.state.hasError) return <h2>Something went wrong.</h2>;
+    return this.props.children;
+  }
+}
+```
+
+
+14.3 SERVER COMPONENTS (RSC) OVERVIEW
+-------------------------------------
+
+Core Concepts
+-------------
+- Render on the server, stream serialized component payloads to client.
+- No client JS for server components themselves; reduces bundle size.
+- Can access server resources directly (DB, filesystem) without fetch.
+
+Rules
+-----
+- Server components: default in RSC-enabled frameworks (Next.js App Router).
+- Client components: add `'use client'` at top; required for hooks/state/effects.
+- Server → Client boundaries require serializable props.
+
+Example (Next.js App Router)
+----------------------------
+```jsx
+// app/users/page.jsx (Server Component)
+import { listUsers } from '@/db';
+import UserCard from './UserCard';
+
+export default async function UsersPage() {
+  const users = await listUsers();
+  return (
+    <div className="grid">
+      {users.map((u) => <UserCard key={u.id} user={u} />)}
+    </div>
+  );
+}
+
+// app/users/UserCard.jsx (Client Component)
+'use client';
+export default function UserCard({ user }) {
+  return <div>{user.name}</div>;
+}
+```
+
+When to Use
+-----------
+- Data-heavy pages where server can pre-render with no client fetch.
+- Reduce client bundle by keeping logic on server.
+- Co-locate data access near UI without API layer for internal calls.
+
+
+14.4 SERVER ACTIONS (NEXT.JS / RSC ECOSYSTEM)
+---------------------------------------------
+
+- Enables calling server functions directly from client or server components.
+- Great for mutations without manual API routes.
+
+Example
+-------
+```jsx
+// app/actions.js
+'use server';
+import { db } from '@/db';
+export async function addTodo(text) {
+  return db.todo.create({ data: { text } });
+}
+
+// app/page.jsx (Client)
+'use client';
+import { useState } from 'react';
+import { addTodo } from './actions';
+
+export default function Home() {
+  const [text, setText] = useState('');
+  return (
+    <form action={async (formData) => {
+      await addTodo(formData.get('text'));
+      setText('');
+    }}>
+      <input name="text" value={text} onChange={(e) => setText(e.target.value)} />
+      <button type="submit">Add</button>
+    </form>
+  );
+}
+```
+
+
+14.5 STREAMING & PARTIAL RENDER
+--------------------------------
+
+- Streaming lets server send HTML/Suspense boundaries progressively.
+- Improves TTFB for the shell and shows fallbacks while data resolves.
+
+Next.js Example
+---------------
+```jsx
+// app/page.jsx
+import { Suspense } from 'react';
+import Products from './Products';
+import Hero from './Hero';
+
+export default function Page() {
+  return (
+    <>
+      <Hero />
+      <Suspense fallback={<p>Loading products…</p>}>
+        <Products />
+      </Suspense>
+    </>
+  );
+}
+```
+
+
+14.6 ROUTING EVOLUTION (APP ROUTER MENTAL MODEL)
+-----------------------------------------------
+- File-system routing with nested layouts; each segment can be server/client.
+- Loading UI via `loading.js`; error UI via `error.js` per route segment.
+- Route handlers (`route.js`) for server endpoints colocated with UI.
+
+
+14.7 DATA FETCHING STRATEGIES (MODERN)
+--------------------------------------
+- `fetch` on server with automatic caching/revalidation (Next.js):
+  - `cache: 'force-cache'` (default), `cache: 'no-store'` for dynamic.
+  - `revalidate: n` for ISR-like behavior.
+- Client-side data libraries: React Query/SWR still valuable for client mutations and live updates.
+
+Example (Next.js fetch with revalidate)
+---------------------------------------
+```jsx
+const res = await fetch('https://api.example.com/posts', { next: { revalidate: 60 } });
+const posts = await res.json();
+```
+
+
+14.8 FORMS & MUTATIONS (RSC ERA)
+---------------------------------
+- Use Server Actions or API routes for mutations; avoid shipping client fetch boilerplate when possible.
+- Optimistic UI still handled client-side when desired.
+
+
+14.9 ARCHITECTURAL GUIDELINES
+-----------------------------
+- Choose rendering mode per route/segment: server-first for data-heavy pages, client for interactive islands.
+- Keep shared UI as Server Components when it doesn’t need client APIs.
+- Isolate interactive pieces as Client Components to limit hydration cost.
+- Co-locate data access with the route segment that needs it.
+
+
+14.10 MIGRATION NOTES (LEGACY TO MODERN)
+----------------------------------------
+- Start by code-splitting heavy routes/components with `React.lazy`.
+- Introduce Suspense boundaries around data/loading states.
+- Gradually move data fetching to server (if using Next.js App Router).
+- Split large contexts; consider server-rendered data passed via props.
+- Audit bundle with analyzer; remove unused client bundles.
+
+
+14.11 OBSERVABILITY & DX
+------------------------
+- Use React DevTools with "Highlight updates" in concurrent flows.
+- Next.js: `NEXT_RUNTIME_LOG=1` (when available) to see server/client usage.
+- Log cache hits/misses for data fetching to tune revalidation.
+
+
+14.12 SECURITY & EDGE CONSIDERATIONS
+------------------------------------
+- Keep secrets and DB access on the server side (Server Components / Actions).
+- Validate all inputs server-side even when using Server Actions.
+- Consider edge runtime for latency-sensitive reads; ensure deps are edge-safe.
+
+
+14.13 PRACTICE EXERCISES
+------------------------
+1) Transitioned Search
+- Build a search/filter UI using `useTransition`; show pending state; measure render count.
+
+2) Deferred Typeahead
+- Use `useDeferredValue` for a large list; compare responsiveness vs. non-deferred.
+
+3) Suspense + Streaming Page (Next.js)
+- Create a page with Hero + Suspense-wrapped products section streaming in.
+
+4) Server/Client Split
+- Convert a page so data fetch happens in a Server Component; keep an interactive widget as a Client Component.
+
+5) Server Action Mutation
+- Implement an add-item form using a Server Action; show confirmation; no client fetch.
+
+
+14.14 COMMON MISTAKES & TIPS
+----------------------------
+Common Mistakes
+- Marking everything `'use client'`, losing RSC benefits.
+- Mixing server-only modules (DB/FS) into Client Components.
+- Overusing transitions where simple debounce suffices.
+- Missing Suspense boundaries around lazy/data segments.
+- Forgetting error boundaries for Suspense fallbacks.
+
+Tips
+- Default to Server Components; opt into Client only when needed (state, effects, event handlers, refs).
+- Use transitions for expensive state updates tied to user input.
+- Place Suspense boundaries near components that load data or lazy chunks.
+- Keep props across server/client boundaries serializable.
+- Measure bundle and render timings after changes.
+
+
+NEXT STEPS
+----------
+You finished Module 14! You can now:
+✓ Use concurrent features (transitions, deferred values)
+✓ Apply Suspense for lazy and data boundaries
+✓ Understand Server Components, Server Actions, and streaming
+✓ Design routing/data strategies in modern React/Next.js
+
+Next up: Module 15 – Best Practices and Capstone Projects.

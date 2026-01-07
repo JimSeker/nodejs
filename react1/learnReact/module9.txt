@@ -1,0 +1,555 @@
+MODULE 9: STYLING IN REACT
+==========================
+
+9.1 CORE CSS IN REACT
+---------------------
+
+CSS Basics and Structure
+------------------------
+- Keep global resets minimal; prefer a small normalize.
+- Scope styles to components to avoid cascade surprises.
+- Use a design token layer (colors, spacing, typography) for consistency.
+
+File Organization Patterns
+--------------------------
+- Global: `src/index.css` for resets, base typography, CSS variables.
+- Component-scoped: colocate `Button.css` with `Button.jsx`.
+- Utilities: `src/styles/tokens.css` for design tokens; `src/styles/mixins.css` for reusable patterns.
+
+Global Base Example
+-------------------
+```css
+/* src/index.css */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --color-bg: #0f172a;
+  --color-surface: #111827;
+  --color-primary: #2563eb;
+  --color-primary-strong: #1d4ed8;
+  --color-text: #e2e8f0;
+  --color-muted: #94a3b8;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-sm: 0 6px 24px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at 20% 20%, #0b1224, #0a0f1e 45%, #070b14 80%);
+  color: var(--color-text);
+}
+a { color: var(--color-primary); text-decoration: none; }
+```
+
+Component-Scoped CSS Example
+----------------------------
+```jsx
+// src/components/Card.jsx
+import './Card.css';
+
+export function Card({ title, children }) {
+  return (
+    <article className="card">
+      <header className="card__title">{title}</header>
+      <div className="card__body">{children}</div>
+    </article>
+  );
+}
+```
+```css
+/* src/components/Card.css */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.card__title { font-weight: 700; margin-bottom: 8px; }
+.card__body { color: var(--color-muted); }
+```
+
+
+9.2 CSS MODULES
+---------------
+
+Why CSS Modules
+---------------
+- Local scoping by default (class name hashing).
+- Avoids global collisions; keeps predictable styling.
+
+Setup (Vite/CRA defaults support)
+---------------------------------
+- Name files `Component.module.css`.
+
+Usage
+-----
+```jsx
+// src/components/Button.jsx
+import styles from './Button.module.css';
+
+export function Button({ variant = 'primary', children, ...props }) {
+  return (
+    <button
+      className={`${styles.button} ${styles[variant]}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+```
+```css
+/* Button.module.css */
+.button {
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.button:hover { transform: translateY(-1px); }
+.primary { background: var(--color-primary); color: white; }
+.secondary { background: #1f2937; color: var(--color-text); }
+.danger { background: #dc2626; color: white; }
+```
+
+Pattern: Variants Map
+---------------------
+```jsx
+const variantClass = {
+  primary: styles.primary,
+  ghost: styles.ghost,
+  outline: styles.outline,
+};
+<button className={`${styles.button} ${variantClass[variant]}`}>Buy</button>
+```
+
+
+9.3 STYLED COMPONENTS
+---------------------
+
+Why
+---
+- Co-locate styles with components using tagged template literals.
+- Dynamic styling via props; built-in theming.
+
+Setup
+-----
+```bash
+npm install styled-components
+```
+
+Basic Usage
+-----------
+```jsx
+import styled from 'styled-components';
+
+const Badge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: ${({ tone }) => tone === 'success' ? '#16a34a' : '#2563eb'};
+  color: #f8fafc;
+`;
+
+export function StatusBadge({ tone = 'info', children }) {
+  return <Badge tone={tone}>{children}</Badge>;
+}
+```
+
+Theming
+-------
+```jsx
+// theme.js
+export const theme = {
+  colors: {
+    bg: '#0b1224',
+    surface: '#111827',
+    primary: '#2563eb',
+    text: '#e2e8f0',
+  },
+  radii: { sm: '6px', md: '12px' },
+};
+```
+```jsx
+// main.jsx
+import { ThemeProvider } from 'styled-components';
+import { theme } from './theme';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ThemeProvider theme={theme}>
+    <App />
+  </ThemeProvider>
+);
+```
+```jsx
+// Using theme
+const Panel = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  border-radius: ${({ theme }) => theme.radii.md};
+`;
+```
+
+Global Styles
+-------------
+```jsx
+import { createGlobalStyle } from 'styled-components';
+
+const GlobalStyles = createGlobalStyle`
+  body { margin: 0; background: #0b1224; color: #e2e8f0; }
+`;
+
+// Place <GlobalStyles /> once near root
+```
+
+Performance Tips
+----------------
+- Avoid creating styled components inside render.
+- Prefer `as` prop or variants instead of many boolean props.
+
+
+9.4 TAILWIND CSS (UTILITY-FIRST)
+--------------------------------
+
+Why
+---
+- Rapid iteration with utility classes.
+- Design tokens via config.
+
+Setup (Vite)
+-------------
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+- Add to `tailwind.config.js` content: `./index.html`, `./src/**/*.{js,jsx,ts,tsx}`.
+- Add to `src/index.css`:
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+Usage Example
+-------------
+```jsx
+export function PricingCard() {
+  return (
+    <div className="bg-slate-900 text-slate-100 p-6 rounded-xl shadow-lg border border-white/5">
+      <p className="text-sm text-slate-400">Pro</p>
+      <p className="text-3xl font-bold mt-2">$19/mo</p>
+      <ul className="mt-4 space-y-2 text-sm text-slate-300">
+        <li>✓ Unlimited projects</li>
+        <li>✓ Priority support</li>
+      </ul>
+      <button className="mt-6 w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 font-semibold">
+        Start Trial
+      </button>
+    </div>
+  );
+}
+```
+
+Extracting Components with `clsx`
+---------------------------------
+```bash
+npm install clsx
+```
+```jsx
+import clsx from 'clsx';
+
+function Button({ variant = 'primary', children }) {
+  return (
+    <button
+      className={clsx(
+        'px-4 py-2 rounded-lg font-semibold transition',
+        variant === 'primary' && 'bg-blue-600 text-white hover:bg-blue-500',
+        variant === 'ghost' && 'bg-white/5 text-slate-100 hover:bg-white/10'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+Pros / Cons
+-----------
+- Pros: Fast, consistent spacing/scale, great responsive utilities.
+- Cons: Readability for newcomers, long class strings, coupling markup to style.
+
+
+9.5 CSS-IN-JS ALTERNATIVES
+--------------------------
+
+Popular Options
+---------------
+- Emotion (`@emotion/react`, `@emotion/styled`)
+- Stitches / Vanilla Extract for zero-runtime
+- Linaria (compile-time CSS-in-JS)
+
+When to Choose
+--------------
+- Need theming + dynamic props: styled-components/emotion.
+- Need zero-runtime CSS with type safety: vanilla-extract/linaria.
+
+
+9.6 RESPONSIVE DESIGN
+---------------------
+
+Breakpoints Strategy
+--------------------
+- Define tokens: `sm: 640px`, `md: 768px`, `lg: 1024px`, `xl: 1280px`.
+- Prefer mobile-first (min-width queries).
+
+Example with CSS Modules
+------------------------
+```css
+/* Card.module.css */
+.card { padding: 16px; }
+@media (min-width: 768px) {
+  .card { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+```
+
+Fluid Typography
+----------------
+```css
+:root {
+  --step-0: clamp(1rem, 0.95rem + 0.2vw, 1.1rem);
+  --step-1: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem);
+}
+```
+
+
+9.7 THEMING (LIGHT/DARK)
+-------------------------
+
+CSS Variables + Data Attribute
+------------------------------
+```css
+:root[data-theme='light'] {
+  --bg: #f8fafc;
+  --text: #0f172a;
+  --surface: #e2e8f0;
+  --primary: #2563eb;
+}
+:root[data-theme='dark'] {
+  --bg: #0b1224;
+  --text: #e2e8f0;
+  --surface: #111827;
+  --primary: #60a5fa;
+}
+body { background: var(--bg); color: var(--text); }
+```
+```jsx
+function ThemeToggle() {
+  const [theme, setTheme] = useState('dark');
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+  return (
+    <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+      Switch to {theme === 'dark' ? 'light' : 'dark'} mode
+    </button>
+  );
+}
+```
+
+Persisting Theme
+----------------
+- Store preference in `localStorage`; hydrate on load to avoid flash.
+
+
+9.8 ANIMATIONS & MOTION
+-----------------------
+
+CSS Transitions & Keyframes
+---------------------------
+```css
+.button { transition: transform 160ms ease, box-shadow 160ms ease; }
+.button:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card { animation: fadeInUp 320ms ease; }
+```
+
+Framer Motion
+-------------
+```bash
+npm install framer-motion
+```
+```jsx
+import { motion } from 'framer-motion';
+
+export function Modal({ open, onClose, children }) {
+  if (!open) return null;
+  return (
+    <div className="backdrop" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+        onClick={(e) => e.stopPropagation()}
+        className="modal"
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+```
+
+Motion Guidelines
+-----------------
+- Keep durations short (150–400ms).
+- Use motion to indicate hierarchy/state changes.
+- Provide reduced-motion support (`@media (prefers-reduced-motion: reduce)`).
+
+
+9.9 ACCESSIBILITY & STYLES
+--------------------------
+
+Focus States
+------------
+```css
+button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+```
+
+Color Contrast
+--------------
+- Maintain WCAG AA: text contrast ratio >= 4.5:1.
+- Test with tooling (e.g., axe, Stark).
+
+Reduced Motion
+--------------
+```css
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+```
+
+
+9.10 DESIGN SYSTEM BASICS
+-------------------------
+
+Design Tokens
+-------------
+- Colors, spacing, radii, typography, shadows defined centrally.
+- Expose tokens via CSS variables and JS objects.
+
+Component Primitives
+--------------------
+- Buttons, Inputs, Cards, Modals, Grid system.
+- Build with accessibility first; style variants via props.
+
+Example: Token Exports
+----------------------
+```js
+// tokens.js
+export const tokens = {
+  color: {
+    primary: '#2563eb',
+    surface: '#111827',
+    text: '#e2e8f0',
+  },
+  radius: { sm: 6, md: 12 },
+  shadow: { sm: '0 8px 30px rgba(0,0,0,0.18)' },
+};
+```
+
+
+9.11 CSS ARCHITECTURE PATTERNS
+------------------------------
+
+BEM (Block Element Modifier)
+-----------------------------
+- Naming: `.card`, `.card__title`, `.card--featured`.
+- Helps readability and specificity control.
+
+Utility + Component Hybrid
+--------------------------
+- Use utilities for spacing/layout; components for complex styling.
+
+Avoid Deep Specificity
+----------------------
+- Prefer single-class selectors; avoid nesting beyond 2 levels.
+
+
+9.12 PERFORMANCE & MAINTAINABILITY
+----------------------------------
+
+Tips
+----
+- Minimize unused CSS; use purging (Tailwind does this by default).
+- Avoid inline styles for frequently changing objects to prevent rerenders unless needed for dynamic values.
+- Memoize style objects if passed as props.
+- Preload critical fonts; limit font weights.
+
+
+9.13 PRACTICE EXERCISES
+-----------------------
+
+1) Themed Dashboard
+- Build light/dark themes with CSS variables; toggle persists.
+- Components: nav, cards, tables with responsive layout.
+
+2) Pricing Page (Utility-First)
+- Use Tailwind utilities; extract 2 reusable components.
+- Ensure responsive grid and accessible buttons.
+
+3) Component Library Slice
+- Create Button, Input, Card with CSS Modules and design tokens.
+- Add variants (primary/ghost/danger) and disabled/focus states.
+
+4) Animated Modal
+- Use Framer Motion for enter/exit; include backdrop, focus trap, ESC close.
+- Respect `prefers-reduced-motion`.
+
+5) Responsive Gallery
+- CSS Grid with fluid columns; hover effects; skeleton loading placeholders.
+
+
+9.14 COMMON MISTAKES & TIPS
+---------------------------
+
+Common Mistakes
+- Overusing global CSS causing collisions.
+- Ignoring focus states and contrast.
+- Hardcoding colors instead of tokens/variables.
+- Bloated class strings without extraction (Tailwind).
+- Creating new styled components inside renders.
+- Animations without reduced-motion support.
+
+Tips
+- Start with tokens and spacing scale; stay consistent.
+- Choose one primary styling approach per project to reduce cognitive load.
+- Co-locate styles with components for maintainability.
+- Use CSS variables for theming and dynamic values.
+- Test with axe/Storybook for accessibility and visual regressions.
+
+
+NEXT STEPS
+----------
+You finished Module 9! You can now:
+✓ Structure global and component-scoped CSS
+✓ Use CSS Modules for scoped styles
+✓ Apply styled-components with theming
+✓ Ship utility-first UIs with Tailwind
+✓ Build responsive, themed, and animated components
+✓ Avoid common styling pitfalls
+
+Next up: Module 10 – Testing React apps (Jest, React Testing Library, component and integration testing).

@@ -1,0 +1,316 @@
+MODULE 12: TYPESCRIPT WITH REACT
+================================
+
+12.1 WHY TYPESCRIPT IN REACT
+----------------------------
+- Catches bugs at compile time (props, state, API shapes).
+- Improves DX with IntelliSense/autocomplete/refactors.
+- Enables safer large-scale components and shared contracts.
+
+Setup
+-----
+```bash
+npm install -D typescript @types/react @types/react-dom
+npx tsc --init
+```
+- Set `jsx: "react-jsx"`, `strict: true`, `noImplicitAny: true`, `moduleResolution: "bundler"` (for Vite).
+
+
+12.2 TYPING BASIC COMPONENTS
+----------------------------
+
+Function Components
+-------------------
+```tsx
+import { ReactNode } from 'react';
+
+type ButtonProps = {
+  children: ReactNode;
+  variant?: 'primary' | 'ghost';
+  disabled?: boolean;
+  onClick?: () => void;
+};
+
+export function Button({ children, variant = 'primary', ...rest }: ButtonProps) {
+  return (
+    <button data-variant={variant} {...rest}>
+      {children}
+    </button>
+  );
+}
+```
+
+Children and Optional Props
+---------------------------
+- Use `ReactNode` for renderable children.
+- Mark optional props with `?`; provide defaults.
+
+
+12.3 TYPING EVENTS & FORMS
+--------------------------
+```tsx
+function LoginForm() {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.value);
+  };
+  return (
+    <form onSubmit={handleSubmit}>
+      <input onChange={handleChange} />
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+Event Types
+-----------
+- `React.MouseEvent<HTMLButtonElement>`
+- `React.KeyboardEvent<HTMLInputElement>`
+- `React.ChangeEvent<HTMLSelectElement>`
+
+
+12.4 STATE & REDUCERS
+---------------------
+```tsx
+const [count, setCount] = useState<number>(0);
+```
+
+Reducer Example
+---------------
+```tsx
+type Action = { type: 'inc' } | { type: 'dec' } | { type: 'set'; payload: number };
+
+type State = { count: number };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'inc': return { count: state.count + 1 };
+    case 'dec': return { count: state.count - 1 };
+    case 'set': return { count: action.payload };
+    default: return state;
+  }
+}
+```
+
+
+12.5 TYPING CUSTOM HOOKS
+------------------------
+```tsx
+import { useEffect, useState } from 'react';
+
+type FetchState<T> = { data: T | null; error: string | null; loading: boolean };
+
+export function useFetch<T>(url: string) {
+  const [state, setState] = useState<FetchState<T>>({ data: null, error: null, loading: true });
+  useEffect(() => {
+    let active = true;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data: T) => active && setState({ data, error: null, loading: false }))
+      .catch((err: Error) => active && setState({ data: null, error: err.message, loading: false }));
+    return () => { active = false; };
+  }, [url]);
+  return state;
+}
+```
+
+Generics
+--------
+- Use `<T>` to keep hook reusable.
+- Call site provides type or let inference do it.
+
+
+12.6 TYPING CONTEXT
+-------------------
+```tsx
+import { createContext, useContext } from 'react';
+
+type AuthValue = {
+  user: { id: string; name: string } | null;
+  login: (name: string) => void;
+  logout: () => void;
+};
+
+const AuthContext = createContext<AuthValue | undefined>(undefined);
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}
+```
+- Context default `undefined` forces provider usage checks.
+
+
+12.7 TYPING FORWARDREF & COMPONENT AS PROP
+------------------------------------------
+```tsx
+import { forwardRef, ComponentPropsWithoutRef } from 'react';
+
+type InputProps = ComponentPropsWithoutRef<'input'> & { label?: string };
+
+export const LabeledInput = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, ...props }, ref) => (
+    <label>
+      {label && <span>{label}</span>}
+      <input ref={ref} {...props} />
+    </label>
+  )
+);
+LabeledInput.displayName = 'LabeledInput';
+```
+
+Polymorphic Components (as prop)
+--------------------------------
+```tsx
+type AsProp<C extends React.ElementType> = {
+  as?: C;
+} & Omit<React.ComponentPropsWithoutRef<C>, 'as'>;
+
+function Box<C extends React.ElementType = 'div'>(
+  { as, ...props }: AsProp<C>
+) {
+  const Comp = as || 'div';
+  return <Comp {...props} />;
+}
+```
+
+
+12.8 FORMS & LIBRARIES WITH TS
+------------------------------
+- React Hook Form has strong TS support; infer types from schema.
+```tsx
+import { useForm } from 'react-hook-form';
+
+type FormValues = { email: string; password: string };
+
+const { register, handleSubmit } = useForm<FormValues>();
+```
+
+Schema Validation (Zod)
+----------------------
+```tsx
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({ email: z.string().email(), age: z.number().min(18) });
+type FormValues = z.infer<typeof schema>;
+
+const { register } = useForm<FormValues>({ resolver: zodResolver(schema) });
+```
+
+
+12.9 TYPING API RESPONSES
+-------------------------
+```tsx
+type User = { id: string; name: string; email: string };
+
+async function getUser(): Promise<User> {
+  const res = await fetch('/api/user');
+  if (!res.ok) throw new Error('fail');
+  return res.json();
+}
+```
+
+Runtime Validation
+------------------
+- Use zod/yup to validate unknown data, then narrow types.
+
+
+12.10 TS + REACT QUERY / AXIOS
+------------------------------
+```tsx
+import { useQuery } from '@tanstack/react-query';
+
+type Post = { id: number; title: string };
+
+const { data } = useQuery<Post[]>({ queryKey: ['posts'], queryFn: fetchPosts });
+```
+
+Axios Generics
+--------------
+```tsx
+import axios from 'axios';
+const res = await axios.get<User[]>('/users');
+```
+
+
+12.11 EXHAUSTIVE CHECKS
+-----------------------
+```tsx
+switch (status) {
+  case 'idle': return null;
+  case 'loading': return <Spinner />;
+  case 'error': return <Error />;
+  default: {
+    const _never: never = status; // compiler error if new status added
+    return _never;
+  }
+}
+```
+
+
+12.12 MIGRATING JS → TS
+-----------------------
+- Start with `allowJs: true`, gradually add `.ts/.tsx`.
+- Add types to leaf components first.
+- Fix `any` by narrowing: unknown → checks → specific types.
+- Use `strict` mode; loosen selectively only when necessary.
+
+
+12.13 TYPES & UTILITY TYPES
+---------------------------
+- `Partial<T>`, `Required<T>`, `Pick<T, K>`, `Omit<T, K>`, `Record<K, V>`, `ReturnType<F>`, `Parameters<F>`.
+- Use `Readonly` for props that should not be mutated.
+
+
+12.14 ORGANIZING TYPES
+----------------------
+- Feature folders: `users/types.ts` per domain.
+- Avoid giant global `types.ts`; keep close to usage.
+- Export API DTOs separately from UI view models if shapes differ.
+
+
+12.15 TESTING WITH TS
+---------------------
+- Vitest/Jest work with TS via tsconfig paths; include `setupTests.ts` if needed.
+- Add `tsconfig.spec.json` if you want separate test tsconfig.
+
+
+12.16 COMMON PITFALLS & TIPS
+----------------------------
+Common Pitfalls
+- Overusing `any`; losing benefits.
+- Forgetting to narrow `unknown` data from APIs.
+- Missing dependency types in `useEffect` causing wrong assumptions.
+- Improper event types leading to `any` escape hatches.
+
+Tips
+- Prefer explicit types on public interfaces (props, exports).
+- Let inference work for locals; annotate where inference is unclear.
+- Use discriminated unions for UI states.
+- Keep utility types small and composable.
+- Enforce `strict` for consistency.
+
+
+12.17 PRACTICE EXERCISES
+------------------------
+1) Convert a JS component to TS: add typed props and events.
+2) Build a typed `useFetch<T>` hook with abort support.
+3) Create an AuthContext with typed user and actions; enforce provider use.
+4) Add Zod schema + infer types for a form and wire to React Hook Form.
+5) Add exhaustive checks for a status union; verify compiler catches missing cases.
+
+
+NEXT STEPS
+----------
+You finished Module 12! You can now:
+✓ Type components, events, hooks, and context
+✓ Use generics for reusable hooks and API helpers
+✓ Integrate TS with forms, React Query, and Axios
+✓ Apply strict typing, unions, and utility types
+
+Next up: Module 13 – Build and Deployment.
