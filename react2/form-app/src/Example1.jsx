@@ -21,6 +21,17 @@ function Example1() {
         e.preventDefault();
         console.log('Form data:', formData);
         // Submit to server
+        //...
+        //show alert box that form is submitted.
+        alert("Form submitted!");
+        //rest values input fields back to empty, via  formData to initial state. 
+        setFormData({
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            message: ''
+        });
     };
 
     return (
@@ -64,7 +75,13 @@ function Example1() {
             <br />
             <button type="submit">Submit</button>
         </form>
-        note, the submit button is actually turned off.
+        note, the submit button is actually turned off.<br/>
+        Displaying form data:<br/>
+        Firstname: {formData.firstName} <br />
+        Lastname: {formData.lastName} <br />
+        Email: {formData.email} <br />
+        Phone: {formData.phone} <br />
+        Message: {formData.message} <br />
         </>
     );
 }
