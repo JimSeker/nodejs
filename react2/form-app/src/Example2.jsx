@@ -48,9 +48,9 @@ function ScoreList({ scores }) {
 
 function DisplayScore({ score }) {
     return (
-        <div>
+        <>
             <p>Name: {score.name}, Score: {score.score}</p>
-        </div>
+        </>
     );
 }
 
