@@ -1,17 +1,26 @@
 //import { useState, useRef, useEffect } from 'react'
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import './App.css'
 import { QueryClient, QueryClientProvider, useQuery, } from '@tanstack/react-query';
-
+import { PosProvider } from './PosContext';
+import PosContext from './PosContext';
 
 const queryClient = new QueryClient();
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
-    <>
+    <PosProvider >
       <h1>ReST API</h1>
+      <RootLayout />
+    </PosProvider>
+  )
+}
+
+function RootLayout() {
+  const { count, setCount } = useContext(PosContext);
+  return (
+    <>
       <div className="card">
         <button onClick={() => setCount(() => 0)}>
           Display Data
@@ -33,6 +42,7 @@ function App() {
     </>
   )
 }
+
 
 function DisplayData() {
   const { isPending, error, data } = useQuery({
@@ -114,8 +124,6 @@ function UpdateOneLine({ id, name, score }) {
 
 
 function UpdateData() {
-
-
   const { isPending, error, data } = useQuery({
     queryKey: ['repoData'],
     queryFn: () =>
@@ -150,6 +158,8 @@ function UpdateData() {
 
 function DeleteData() {
 
+  const { setCount } = useContext(PosContext);
+
   const { isPending, error, data } = useQuery({
     queryKey: ['repoData'],
     queryFn: () =>
@@ -175,6 +185,7 @@ function DeleteData() {
           .then(data => {
             console.log('Success:', data);
             alert('Data deleted successfully!');
+            setCount(() => 0);
           })
           .catch((error) => {
             console.error('Error:', error);
@@ -193,6 +204,7 @@ function DeleteData() {
 }
 
 function CreateData() {
+  const { setCount } = useContext(PosContext);
   const [formData, setFormData] = useState({
     name: '',
     score: 0
@@ -219,6 +231,7 @@ function CreateData() {
       .then(data => {
         console.log('Success:', data);
         alert(data.message);
+        setCount(() => 0);
       })
       .catch((error) => {
         console.error('Error:', error);
