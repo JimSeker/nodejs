@@ -54,6 +54,7 @@ export const highScoreUpdateProcess = async (req, res) => {
     const name = req.body.name || '';
     const score = req.body.score || '';
     // input validation
+    console.log("id is " + id + " name is " + name + " score is " + score);
     if (id == "" || name == '' || score == '') {
         console.log("id " + id + " name " + name + " or score " + score + " is invalid");
         return res.status(200).json({ error: true, message: "Invalid input" });

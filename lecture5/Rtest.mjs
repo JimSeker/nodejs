@@ -37,7 +37,7 @@ async function main() {
     //id is number for the test4 or other test data you have.  but you will need 
     //to check for the id.  looking at the current data, id would the next number assuming
     //you are using top add.
-    let id = 9;
+    let id = 36;
 
     //now update test4 from 100 to 200.
     await axios.put('http://localhost:3000/api/scores/' + id, {
@@ -75,9 +75,9 @@ async function main() {
 
 main().then(() => {
     console.log("done");
-    r1.close();
+   // r1.close();
 }
 ).catch((err) => {
     console.log(err);
-    r1.close();
+    //r1.close();
 });
