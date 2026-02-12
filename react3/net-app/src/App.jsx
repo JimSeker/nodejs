@@ -4,6 +4,7 @@ import './App.css'
 import { QueryClient, QueryClientProvider, useQuery, } from '@tanstack/react-query';
 import { PosProvider } from './PosContext';
 import PosContext from './PosContext';
+import NetDataComponent from './NetDataComponent';
 
 const queryClient = new QueryClient();
 
@@ -35,10 +36,11 @@ function RootLayout() {
           Delete Data
         </button>
       </div>
-      {count == 0 ? <QueryClientProvider client={queryClient}>        <DisplayData />      </QueryClientProvider>
+      {/* {count == 0 ? <QueryClientProvider client={queryClient}>        <DisplayData />      </QueryClientProvider>
         : count == 1 ? <CreateData /> : count == 2 ?
           <QueryClientProvider client={queryClient}><UpdateData /> </QueryClientProvider> :
-          <QueryClientProvider client={queryClient}><DeleteData /> </QueryClientProvider>}
+          <QueryClientProvider client={queryClient}><DeleteData /> </QueryClientProvider>} */}
+        <NetDataComponent  /> 
     </>
   )
 }
@@ -97,7 +99,7 @@ function UpdateOneLine({ id, name, score }) {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({ id: id, name: formData.name, score: formData.score }),
+      body: new URLSearchParams({name: formData.name, score: formData.score }),
     })
       .then(response => response.json())
       .then(data => {
