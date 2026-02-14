@@ -17,6 +17,7 @@ const NetDataComponent = () => {
                 dispatch({ type: 'FETCH_ERROR', payload: error });
             });
     }
+    //get the data on the first instance.  
     useEffect(() => {
         fetchData();
     }, []);
@@ -101,7 +102,6 @@ function taskReducer(state, action) {
 function DisplayData({ data, addData }) {
     if (data === null) {
         return <div>Loading...</div>;
-
     }
     const listItems = data.data.map((item) =>
         <li key={item.id}>
@@ -115,7 +115,6 @@ function DisplayData({ data, addData }) {
             <CreateData handleCreateTask={addData} />
         </div>
     )
-
 }
 
 function CreateData({ handleCreateTask }) {
@@ -191,7 +190,6 @@ function UpdateData({ data, updateData }) {
             <UpdateOneLine id={item.id} name={item.name} score={item.score} handleUpdateTask={updateData} />
             <br /> 
         </li>
-         
     );
     return (
         <div>
