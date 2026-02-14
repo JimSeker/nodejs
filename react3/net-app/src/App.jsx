@@ -36,10 +36,18 @@ function RootLayout() {
           Delete Data
         </button>
       </div>
-      {count == 0 ? <QueryClientProvider client={queryClient}>        <DisplayData />      </QueryClientProvider>
-        : count == 1 ? <CreateData /> : count == 2 ?
-          <QueryClientProvider client={queryClient}><UpdateData /> </QueryClientProvider> :
-          <QueryClientProvider client={queryClient}><DeleteData /> </QueryClientProvider>}
+      {/* Uncomment one version or the other version. they do the same thing, but in very different ways */}
+
+      {/* //uses react-query to fetch the data and display it.  Also uses react-query to handle the mutations for create, update, and delete. */}
+      <QueryClientProvider client={queryClient}>
+        {count == 0 ? <DisplayData />
+          : count == 1 ? <CreateData /> : count == 2 ?
+            <UpdateData /> :
+            <DeleteData />}
+       </QueryClientProvider>
+      
+      {/*//uses the context to keep track of which page we are on, and to update the page when the user clicks on the buttons.  
+      //Also uses the context and useReducer to keep track of the data and to update the data when the user creates, updates, or deletes data. */}
       {/* <NetDataComponent /> */}
     </>
   )
@@ -76,7 +84,7 @@ function DisplayData() {
 }
 
 
-function UpdateOneLine({updateMutation, id, name, score }) {
+function UpdateOneLine({ updateMutation, id, name, score }) {
   console.log("UpdateOneLine: ", id, name, score);
   //console.log("UpdateOneLine: ", id);
   const [formData, setFormData] = useState({
@@ -120,7 +128,7 @@ function UpdateData() {
       },
       body: new URLSearchParams({ name: name, score: score }),
     }),
-    onSuccess: () => {  
+    onSuccess: () => {
       alert('Data updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['repoData'] });
     }
