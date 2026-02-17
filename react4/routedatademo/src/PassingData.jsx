@@ -26,16 +26,16 @@ const PassingData = () => {
 
 
 function MainPage() {
-     const navigate = useNavigate();
+    const navigate = useNavigate();
     return (
         <>
             <h3>Pasing data such as state information to route</h3>
             <NavLink to="/user/42">Go to user profile with URL param</NavLink><br />
             <NavLink to="/product">Go to products without ID</NavLink><br />
             <NavLink to="/product/123">Go to product with ID</NavLink><br />
-           <button  onClick={() => {
-            navigate('/order-confirmation', { state: { orderId: 12345, total: 99.99 } });
-        }}>                Go to order confirmaton with state.            </button>
+            <button onClick={() => {
+                navigate('/order-confirmation', { state: { orderId: 12345, total: 99.99 } });
+            }}>Go to order confirmation with state.</button>
         </>
     )
 }
@@ -45,7 +45,7 @@ function MainPage() {
 
 function OrderConfirmation() {
     const location = useLocation();
-     const navigate = useNavigate();
+    const navigate = useNavigate();
     const { orderId, total } = location.state;
 
     return (
