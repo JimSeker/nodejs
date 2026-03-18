@@ -8,9 +8,9 @@ function App() {
   return (
     <>
       {/* use for part of the demo, using BrowserRouter code. */}
-      {/* <BrowserRouterDemo /> */}
+      <BrowserRouterDemo />
       {/*used for second part of the demo using CreateBrowserRouter code.*/}
-      <CreateBrowserRouterDemo /> 
+      {/* <CreateBrowserRouterDemo />  */}
     
     </>
   )
