@@ -16,7 +16,7 @@
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "firebase-admin": "^13.8.0",
-    "googleapis": "^144.0.0",
+    "googleapis": "^171.4.0",
     "mariadb": "^3.4.0"
   }
 }
