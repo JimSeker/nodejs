@@ -21,7 +21,7 @@
     "mariadb": "^3.4.0"
   },
   "allowScripts": {
-    "@firebase/util@1.15.2": true,
-    "protobufjs@7.6.5": true
+    "@firebase/util@1.15.3": true,
+    "protobufjs@7.6.6": true
   }
 }
