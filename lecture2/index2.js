@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
     res.send('Advanced Mobile');
 });
 
-//about page
+//about page, takes any route that starts with /about  such as /about3 
 app.get(/^\/about/, (req, res) => {
     res.type('text/plain');
     res.send('About Advanced Mobile');
