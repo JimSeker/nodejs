@@ -46,7 +46,7 @@ app.get('/set-random-username', (req, res) => {
   res.redirect('/greeting');
 });
 
-app.get('*', (req, res) => res.send('Check out our <a href="/greeting">greeting</a> page!'));
+app.get(/.*/, (req, res) => res.send('Check out our <a href="/greeting">greeting</a> page!'));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`\nnavigate to http://localhost:${port}/greeting\n`));

@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.get('/thanks', (req, res) => res.render('thanks'));
 
 // see the views/home.hbs file for the contents of this view
-app.get('*', (req, res) => res.render('home'));
+app.get(/.*/, (req, res) => res.render('home'));
 
 app.post('/form-example', (req, res) => {
   console.log(`received contact from ${req.body.name} <${req.body.email}>`);
