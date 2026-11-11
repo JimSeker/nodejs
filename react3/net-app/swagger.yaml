@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: Scores REST API
+  description: PHP-style REST API using GET query parameters and POST form parameters.
+  version: 1.0.0
+
+servers:
+  - url: http://wardpi.cs.uwyo.edu:3000/api
+    description: Development server
+
+security: []
+
+tags:
+  - name: Scores
+    description: Score records
+
+paths:
+  /scores.php:
+    get:
+      tags: [Scores]
+      summary: List scores
+      description: PHP can read the action and optional filters from $_GET.
+      parameters:
+        - name: action
+          in: query
+          required: false
+          description: PHP action name. Defaults to list when omitted.
+          schema:
+            type: string
+            enum: [list]
+            default: list
+        - name: name
+          in: query
+          required: false
+          description: Optional name filter.
+          schema:
+            type: string
+        - name: min_score
+          in: query
+          required: false
+          description: Return only records with a score at least this value.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Scores as CSV. The first row contains column names.
+          content:
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  id,name,score
+                  1,Alice,95
+                  2,Bob,82
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags: [Scores]
+      summary: Create, update, or delete a score
+      description: PHP reads all operation parameters from $_POST. Send the body as application/x-www-form-urlencoded.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/CreateScoreForm'
+                - $ref: '#/components/schemas/UpdateScoreForm'
+                - $ref: '#/components/schemas/DeleteScoreForm'
+            examples:
+              create:
+                summary: Create a score
+                value:
+                  action: create
+                  name: Alice
+                  score: 95
+              update:
+                summary: Update a score
+                value:
+                  action: update
+                  id: 1
+                  name: Alice
+                  score: 98
+              delete:
+                summary: Delete a score
+                value:
+                  action: delete
+                  id: 1
+      responses:
+        '200':
+          description: Operation completed. The PHP endpoint may return JSON or plain text for mutation status.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Score created successfully
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Score not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Score not found
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    CreateScoreForm:
+      type: object
+      required: [action, name, score]
+      properties:
+        action:
+          type: string
+          enum: [create]
+        name:
+          type: string
+          example: Alice
+        score:
+          type: integer
+          format: int32
+          example: 95
+
+    UpdateScoreForm:
+      type: object
+      required: [action, id, name, score]
+      properties:
+        action:
+          type: string
+          enum: [update]
+        id:
+          type: integer
+          format: int32
+          example: 1
+        name:
+          type: string
+          example: Alice
+        score:
+          type: integer
+          format: int32
+          example: 98
+
+    DeleteScoreForm:
+      type: object
+      required: [action, id]
+      properties:
+        action:
+          type: string
+          enum: [delete]
+        id:
+          type: integer
+          format: int32
+          example: 1
+
+    MutationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Score created successfully
+
+  responses:
+    BadRequest:
+      description: Invalid or missing request parameter.
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Missing required parameter
+    ServerError:
+      description: Server or database error.
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Database error
