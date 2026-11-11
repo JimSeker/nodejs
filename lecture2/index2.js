@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 });
 
 //about page
-app.get('/about*', (req, res) => {
+app.get(/^\/about/, (req, res) => {
     res.type('text/plain');
     res.send('About Advanced Mobile');
 });
